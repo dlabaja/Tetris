@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="dotnet-curses" Version="1.0.3" />
+      <PackageReference Include="GtkSharp" Version="3.24.24.95" />
     </ItemGroup>
 
 </Project>

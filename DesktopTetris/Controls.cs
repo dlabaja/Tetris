@@ -1,4 +1,4 @@
-namespace Tetris;
+namespace DesktopTetris;
 
 public class Controls
 {
