@@ -71,7 +71,7 @@ public class Block
     public Block()
     {
         Matrice = blockTypes[new Random().Next(blockTypes.Count)];
-        AnchorPosition = new[]{5, -Matrice.GetLength(0)};
+        AnchorPosition = new[]{5, 0};
         Color = colors[new Random().Next(colors.Count)];
     }
 

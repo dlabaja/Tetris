@@ -11,29 +11,29 @@ public static class WindowManager
 
     static WindowManager()
     {
-        hiddenWindows.CollectionChanged += (sender, args) =>
+        /*hiddenWindows.CollectionChanged += (sender, args) =>
         {
             if (hiddenWindows.Count <= 6)
                 return;
             
+            windows.Remove(windows.Values.Where(x => x == hiddenWindows[0]).First())
             hiddenWindows[0].Close();
             hiddenWindows.RemoveAt(0);
-        };
+        };*/
     }
 
     public static void HideWindow((int x, int y) pos)
     {
         try
         {
-            var window = windows[(pos.y, pos.x)];
+            var window = windows[(pos.x, pos.y)];
             if (!window.IsVisible)
             {
                 return;
             }
-
-            windows.Remove((pos.y, pos.x));
-            hiddenWindows.Add(window);
-            window.Hide();
+            
+            //hiddenWindows.Add(window);
+            window.Dispose();
         }
         catch{}
     }
@@ -51,7 +51,7 @@ public static class WindowManager
             window = new BlockWindow(Renderer.RelativeToAbsoluteCoords(pos), size);
         }
 
-        windows[(pos.y, pos.x)] = window;
+        windows[(pos.x, pos.y)] = window;
 
         return window;
     }

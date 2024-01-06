@@ -6,10 +6,10 @@ namespace DesktopTetris;
 public class Game
 {
     public Block CurrentBlock { get; private set; }
-    private List<int[]> collided;
     public List<Block> Blocks { get; private set; } = new List<Block>();
     public int GameTime { get; private set; } = 0;
     public int Level { get; private set; } = 1;
+    public int Score { get; private set; } = 0;
     public (int, int) Size { get; private set; }
 
     public bool[,] map = new bool[16, 10];
@@ -38,11 +38,28 @@ public class Game
     {
         CurrentBlock.Move(0,1);
         RegenMap();
+        if (IsAtBottom())
+        {
+            
+        }
     }
 
-    private void CheckMaxY(Block block)
+    private bool IsAtBottom()
     {
-        
+        var lowestY = 0;
+        for (int y = 0; y < CurrentBlock.Matrice.GetLength(0); y++)
+        {
+            for (int x = 0; x < CurrentBlock.Matrice.GetLength(1); x++)
+            {
+                if (CurrentBlock.Matrice[y, x])
+                {
+                    lowestY = y;
+                }
+            }
+        }
+
+        return lowestY == 15;
+
     }
 
     private void RegenMap()
