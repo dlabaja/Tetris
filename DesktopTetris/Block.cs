@@ -71,20 +71,20 @@ public class Block
     public Block()
     {
         Matrice = blockTypes[new Random().Next(blockTypes.Count)];
-        AnchorPosition = new[]{5, -Matrice.GetLength(1)};
+        AnchorPosition = new[]{5, -Matrice.GetLength(0)};
         Color = colors[new Random().Next(colors.Count)];
     }
 
     public void Rotate(Rotation rotation)
     {
         var newMatrice = new bool[Matrice.GetLength(0), Matrice.GetLength(1)];
-        for (int x = 0; x < Matrice.GetLength(0); x++)
+        for (int x = 0; x < Matrice.GetLength(1); x++)
         {
-            for (int y = 0; y < Matrice.GetLength(1); y++)
+            for (int y = 0; y < Matrice.GetLength(0); y++)
             {
                 if (rotation == Rotation.Left)
                 {
-                    newMatrice[y, Matrice.GetLength(0) - 1 - x] = Matrice[x, y];
+                    newMatrice[y, Matrice.GetLength(1) - 1 - x] = Matrice[x, y];
                     continue;
                 }
                 newMatrice[x, Matrice.GetLength(0) - 1 - y] = Matrice[x, y];

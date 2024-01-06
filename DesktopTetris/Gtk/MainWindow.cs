@@ -16,9 +16,9 @@ public class MainWindow : Window
         Move(0,0);
         DeleteEvent += (o, args) =>
         {
-            foreach (var window in Renderer.windows.Values)
+            foreach (var window in Screen.ToplevelWindows)
             {
-                window.Close();
+                window.Dispose();
             }
 
             Application.Quit();

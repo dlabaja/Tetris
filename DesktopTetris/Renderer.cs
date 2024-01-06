@@ -1,6 +1,5 @@
 using DesktopTetris.Gtk;
-using Gdk;
-using Gtk;
+using System.Diagnostics;
 using Timer = System.Timers.Timer;
 #pragma warning disable CS0612
 
@@ -10,45 +9,53 @@ public static class Renderer
 {
     private static MainWindow mainWindow;
     private static readonly int blockSize;
-    private static readonly (int width, int height) desktopSize;
     private static readonly int anchor;
-    private static bool[,] renderedMap = new bool[16, 10];
-
-    public static Dictionary<(int, int), BlockWindow> windows = new Dictionary<(int, int), BlockWindow>();
+    
+    private static List<Rectangle> rectanglesOld = new List<Rectangle>();
+    private static List<Rectangle> rectanglesNew = new List<Rectangle>();
 
     static Renderer()
     {
         mainWindow = new MainWindow();
-        desktopSize = (mainWindow.Screen.Width, mainWindow.Screen.Height);
+        (int width, int height) desktopSize = (mainWindow.Screen.Width, mainWindow.Screen.Height);
         blockSize = (int)Math.Round((double)desktopSize.height / 16);
         anchor = (int)Math.Round(((double)desktopSize.width - 10 * blockSize) / 2);
 
         var frameTimer = new Timer(200);
         frameTimer.Elapsed += (_, _) => PrintNewFrame();
         frameTimer.Start();
-
-        for (int x = 0; x < 10; x++)
-        {
-            for (int y = 0; y < 16; y++)
-            {
-                windows.Add((x, y), new BlockWindow(blockSize, RelativeToAbsoluteCoords(x, y)));
-            }
-        }
     }
 
-    private static (int x, int y) RelativeToAbsoluteCoords(int x, int y) => (anchor + x * blockSize, y * blockSize);
+    // converts relative grid coords to the coords on the screen
+    public static (int x, int y) RelativeToAbsoluteCoords((int x, int y) pos) => (anchor + pos.x * blockSize, pos.y * blockSize);
 
     private static void PrintNewFrame()
     {
-        renderedMap = new bool[16, 10];
+        rectanglesOld = rectanglesNew;
+        rectanglesNew.Clear();
+        
         foreach (var block in Program.currentGame.Blocks)
         {
-            PrintBlock(block);
+            CalculateRectangles(block);
         }
-        HideUnusedWindows();
-    }
+        
+        var _rectanglesNew = rectanglesNew;
+        Debug.WriteLine($"{rectanglesNew.Count}");
+        RemoveDuplicates(ref _rectanglesNew);
+        Debug.WriteLine($"{rectanglesNew.Count}");
 
-    private static void PrintBlock(Block block)
+        foreach (var r in _rectanglesNew)
+        {
+            WindowManager.GetNewWindow((r.posX, r.posY), (r.sizeX, r.sizeY));
+        }
+        
+        /*foreach (var r in rectanglesOld)
+        {
+            WindowManager.HideWindow((r.posX, r.posY));
+        }*/
+    }
+    
+    private static void CalculateRectangles(Block block)
     {
         var matrice = block.Matrice;
         var counted = new List<(int, int)>();
@@ -62,51 +69,21 @@ public static class Renderer
                     continue;
                 }
 
+                var pos = block.GetMapRelativePosition(x, y);
                 var r = GetRectSize(matrice, x, y, ref counted);
-                ShowWindow(block, r, x, y);
+                r.posX = pos.x;
+                r.posY = pos.y;
+                
+                rectanglesNew.Add(r);
+                //Debug.WriteLine($"{r.posX};{r.posY}, {r.sizeX}x{r.sizeY}");
             }
         }
     }
 
-    private static void HideUnusedWindows()
-    {
-        var map = Program.currentGame.map;
-        for (int y = 0; y < map.GetLength(0) - 1; y++)
-        {
-            for (int x = 0; x < map.GetLength(1) - 1; x++)
-            {
-                if (renderedMap[y, x])
-                    continue;
-                
-                var window = windows[(x, y)];
-                if (!window.IsVisible)
-                    continue;
-                
-                window.Hide();
-                window.SetDefaultSize(blockSize, blockSize);
-                return;
-            }
-        }
-    }
-
-    private static void ShowWindow(Block block, Rectangle r, int x , int y)
-    {
-        var pos = block.GetMapRelativePosition(x, y);
-        if (pos.x is < 0 or >= 10 || pos.y is < 0 or >= 16)
-            return;
-
-        renderedMap[pos.y, pos.x] = true;
-            
-        var window = windows[pos];
-
-        window.ModifyBg(StateType.Normal, block.Color);
-        window.DefaultSize = new Size(r.sizeX, r.sizeY);
-        window.Show();
-    }
-
+    // finds lowest number of rectangles in a tetris block 
     private static Rectangle GetRectSize(bool[,] matrice, int x, int y, ref List<(int, int)> counted)
     {
-        var r = new Rectangle(new[]{x, y});
+        var r = new Rectangle();
         for (int i = x; i < matrice.GetLength(1); i++)
         {
             if (matrice[y, i])
@@ -134,16 +111,36 @@ public static class Renderer
 
         return r;
     }
-    
+
+    // removes duplicates in the new and old list
+    private static void RemoveDuplicates(ref List<Rectangle> _rectanglesNew)
+    {
+        for (int i = 0; i < _rectanglesNew.Count - 1; i++)
+        {
+            for (int j = 0; j < rectanglesOld.Count - 1; j++)
+            {
+                if (_rectanglesNew[i].posX == rectanglesOld[j].posX
+                    && _rectanglesNew[i].posY == rectanglesOld[j].posY
+                    && _rectanglesNew[i].sizeX == rectanglesOld[j].sizeX
+                    && _rectanglesNew[i].sizeY == rectanglesOld[j].sizeY)
+                {
+                    _rectanglesNew.RemoveAt(i);
+                    rectanglesOld.RemoveAt(j);
+                }
+            }
+        }
+    }
+
     private struct Rectangle
     {
+        public int posX = 0;
+        public int posY = 0;
+        
         public int sizeX = 0;
         public int sizeY = blockSize;
-        public int[] anchor;
 
-        public Rectangle(int[] anchor)
+        public Rectangle()
         {
-            this.anchor = anchor;
         }
     }
 }
