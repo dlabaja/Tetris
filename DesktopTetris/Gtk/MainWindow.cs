@@ -22,6 +22,7 @@ public class MainWindow : Window
             }
 
             Application.Quit();
+            Environment.Exit(0);
         };
 
         scoreLabel = new Label("Score: 0");

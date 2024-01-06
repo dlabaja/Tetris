@@ -12,8 +12,8 @@ public static class Program
         Application.Init();
         new Thread(o =>
         {
-            RuntimeHelpers.RunClassConstructor(typeof(Renderer).TypeHandle);
             currentGame = new Game((20, 20));
+            RuntimeHelpers.RunClassConstructor(typeof(Renderer).TypeHandle);
             Thread.Sleep(-1);
         }).Start();
         Application.Run();

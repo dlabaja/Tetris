@@ -23,15 +23,19 @@ public static class WindowManager
 
     public static void HideWindow((int x, int y) pos)
     {
-        var window = windows[(pos.y, pos.x)];
-        if (!window.IsVisible)
+        try
         {
-            return;
+            var window = windows[(pos.y, pos.x)];
+            if (!window.IsVisible)
+            {
+                return;
+            }
+
+            windows.Remove((pos.y, pos.x));
+            hiddenWindows.Add(window);
+            window.Hide();
         }
-        
-        windows.Remove((pos.y, pos.x));
-        hiddenWindows.Add(window);
-        window.Hide();
+        catch{}
     }
 
     public static BlockWindow GetNewWindow((int x, int y) pos, (int x, int y) size)
@@ -48,9 +52,7 @@ public static class WindowManager
         }
 
         windows[(pos.y, pos.x)] = window;
-        
-        Debug.WriteLine(windows.Count);
-        
+
         return window;
     }
 }

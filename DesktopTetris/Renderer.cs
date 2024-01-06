@@ -12,7 +12,6 @@ public static class Renderer
     private static readonly int anchor;
     
     private static List<Rectangle> rectanglesOld = new List<Rectangle>();
-    private static List<Rectangle> rectanglesNew = new List<Rectangle>();
 
     static Renderer()
     {
@@ -31,31 +30,30 @@ public static class Renderer
 
     private static void PrintNewFrame()
     {
-        rectanglesOld = rectanglesNew;
-        rectanglesNew.Clear();
-        
+        var rectanglesNew = new List<Rectangle>();
         foreach (var block in Program.currentGame.Blocks)
         {
-            CalculateRectangles(block);
+            rectanglesNew = CalculateRectangles(block, rectanglesNew);
         }
         
-        var _rectanglesNew = rectanglesNew;
-        Debug.WriteLine($"{rectanglesNew.Count}");
-        RemoveDuplicates(ref _rectanglesNew);
-        Debug.WriteLine($"{rectanglesNew.Count}");
+        Debug.WriteLine($"-{rectanglesNew.Count}x{rectanglesOld.Count}");
+        var _rectanglesNew = RemoveDuplicates(rectanglesNew);
+        Debug.WriteLine($"I{rectanglesNew.Count}x{rectanglesOld.Count}x{_rectanglesNew.Count}");
 
+        foreach (var r in rectanglesOld)
+        {
+            WindowManager.HideWindow((r.posX, r.posY));
+        }
+        
         foreach (var r in _rectanglesNew)
         {
             WindowManager.GetNewWindow((r.posX, r.posY), (r.sizeX, r.sizeY));
         }
         
-        /*foreach (var r in rectanglesOld)
-        {
-            WindowManager.HideWindow((r.posX, r.posY));
-        }*/
+        rectanglesOld = rectanglesNew;
     }
     
-    private static void CalculateRectangles(Block block)
+    private static List<Rectangle> CalculateRectangles(Block block, List<Rectangle> rectanglesNew)
     {
         var matrice = block.Matrice;
         var counted = new List<(int, int)>();
@@ -64,7 +62,7 @@ public static class Renderer
         {
             for (int x = 0; x < matrice.GetLength(1); x++)
             {
-                if (!matrice[y, x] || counted.Contains((x, y)))
+                if (!matrice[y, x] || counted.Contains((x, y)) || block.GetMapRelativePosition(x, y).y < 0)
                 {
                     continue;
                 }
@@ -78,6 +76,8 @@ public static class Renderer
                 //Debug.WriteLine($"{r.posX};{r.posY}, {r.sizeX}x{r.sizeY}");
             }
         }
+
+        return rectanglesNew;
     }
 
     // finds lowest number of rectangles in a tetris block 
@@ -113,22 +113,52 @@ public static class Renderer
     }
 
     // removes duplicates in the new and old list
-    private static void RemoveDuplicates(ref List<Rectangle> _rectanglesNew)
+    private static List<Rectangle> RemoveDuplicates(List<Rectangle> rectanglesNew)
     {
-        for (int i = 0; i < _rectanglesNew.Count - 1; i++)
+        /*var _new = new List<Rectangle>();
+        var _old = new List<Rectangle>();
+        for (int i = 0; i < rectanglesNew.Count; i++)
         {
-            for (int j = 0; j < rectanglesOld.Count - 1; j++)
+            for (int j = 0; j < rectanglesOld.Count; j++)
             {
-                if (_rectanglesNew[i].posX == rectanglesOld[j].posX
-                    && _rectanglesNew[i].posY == rectanglesOld[j].posY
-                    && _rectanglesNew[i].sizeX == rectanglesOld[j].sizeX
-                    && _rectanglesNew[i].sizeY == rectanglesOld[j].sizeY)
+                if (rectanglesNew[i].posX == rectanglesOld[j].posX
+                    && rectanglesNew[i].posY == rectanglesOld[j].posY
+                    && rectanglesNew[i].sizeX == rectanglesOld[j].sizeX
+                    && rectanglesNew[i].sizeY == rectanglesOld[j].sizeY)
                 {
-                    _rectanglesNew.RemoveAt(i);
-                    rectanglesOld.RemoveAt(j);
+                    _new.Add(rectanglesNew[i]);
+                    _old.Add(rectanglesOld[j]);
                 }
             }
         }
+        
+        rectanglesOld.AddRange(_old);
+        rectanglesOld = rectanglesOld.Distinct().ToList();
+
+        _new.AddRange(rectanglesNew);
+
+        return _new.Distinct().ToList();*/
+
+        for (int i = 0; i < rectanglesNew.Count; i++)
+        {
+            for (int j = 0; j < rectanglesOld.Count; j++)
+            {
+                if (rectanglesNew[i].posX == rectanglesOld[j].posX
+                    && rectanglesNew[i].posY == rectanglesOld[j].posY
+                    && rectanglesNew[i].sizeX == rectanglesOld[j].sizeX
+                    && rectanglesNew[i].sizeY == rectanglesOld[j].sizeY)
+                {
+                    try
+                    {
+                        rectanglesOld.RemoveAt(j);
+                        _rectanglesNew.RemoveAt(i);
+                    }
+                    catch{}
+                }
+            }
+        }
+
+        return _rectanglesNew;
     }
 
     private struct Rectangle
