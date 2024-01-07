@@ -6,11 +6,13 @@ namespace DesktopTetris.Gtk;
 
 public static class WindowManager
 {
+    public static MainWindow mainWindow;
     public static Dictionary<(int, int), BlockWindow> windows = new Dictionary<(int, int), BlockWindow>();
     private static ObservableCollection<BlockWindow> hiddenWindows = new ObservableCollection<BlockWindow>();
 
     static WindowManager()
     {
+        mainWindow = new MainWindow();
         /*hiddenWindows.CollectionChanged += (sender, args) =>
         {
             if (hiddenWindows.Count <= 6)

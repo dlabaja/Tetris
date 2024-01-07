@@ -1,4 +1,5 @@
-﻿using Gtk;
+﻿using DesktopTetris.Gtk;
+using Gtk;
 using System.Runtime.CompilerServices;
 
 namespace DesktopTetris;
@@ -12,8 +13,9 @@ public static class Program
         Application.Init();
         new Thread(o =>
         {
-            currentGame = new Game((20, 20));
             RuntimeHelpers.RunClassConstructor(typeof(Renderer).TypeHandle);
+            RuntimeHelpers.RunClassConstructor(typeof(WindowManager).TypeHandle);
+            currentGame = new Game((20, 20));
             Thread.Sleep(-1);
         }).Start();
         Application.Run();

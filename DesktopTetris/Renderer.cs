@@ -8,7 +8,6 @@ namespace DesktopTetris;
 
 public static class Renderer
 {
-    private static MainWindow mainWindow;
     private static readonly int blockSize;
     private static readonly int anchor;
 
@@ -16,20 +15,13 @@ public static class Renderer
 
     static Renderer()
     {
-        mainWindow = new MainWindow();
-        (int width, int height) desktopSize = (mainWindow.Screen.Width, mainWindow.Screen.Height);
+        (int width, int height) desktopSize = (WindowManager.mainWindow.Screen.Width, WindowManager.mainWindow.Screen.Height);
         blockSize = (int)Math.Round((double)desktopSize.height / 16);
         anchor = (int)Math.Round(((double)desktopSize.width - 10 * blockSize) / 2);
 
         var frameTimer = new Timer(200);
         frameTimer.Elapsed += (_, _) => PrintNewFrame();
-        //frameTimer.Start();
-
-        for (int i = 0; i < 100; i++)
-        {
-            PrintNewFrame();
-            Thread.Sleep(500);
-        }
+        frameTimer.Start();
     }
 
     // converts relative grid coords to the coords on the screen
@@ -41,10 +33,10 @@ public static class Renderer
 
         foreach (var block in Program.currentGame.Blocks)
         {
-            rectanglesNew = CalculateRectangles(block, rectanglesNew);
+            CalculateRectangles(block, ref rectanglesNew);
         }
-
-        var _old = rectanglesOld;
+        CalculateRectangles(Program.currentGame.CurrentBlock, ref rectanglesNew);
+        
         rectanglesNew = RemoveDuplicates(rectanglesNew); // passnutím listu se z nějakýho důvodu vytvoří reference
 
         foreach (var window in WindowManager.windows)
@@ -54,7 +46,7 @@ public static class Renderer
             {
                 try
                 {
-                    //window.Value.Dispose();
+                    window.Value.Dispose();
                 }
                 catch {}
             }
@@ -74,7 +66,7 @@ public static class Renderer
         }
     }
 
-    private static Rectangle?[,] CalculateRectangles(Block block, Rectangle?[,] rectanglesNew)
+    private static void CalculateRectangles(Block block, ref Rectangle?[,] rectanglesNew)
     {
         var matrice = block.Matrice;
         var counted = new List<(int, int)>();
@@ -93,12 +85,14 @@ public static class Renderer
                 r.posX = pos.x;
                 r.posY = pos.y;
 
+                if (pos.y > 15)
+                {
+                    continue;
+                }
                 rectanglesNew[r.posY, r.posX] = r;
                 //Debug.WriteLine($"{r.posX};{r.posY}, {r.sizeX}x{r.sizeY}");
             }
         }
-
-        return rectanglesNew;
     }
 
     // finds lowest number of rectangles in a tetris block 

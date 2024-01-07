@@ -1,3 +1,4 @@
+using DesktopTetris.Gtk;
 using System.Timers;
 using Timer = System.Timers.Timer;
 
@@ -12,7 +13,7 @@ public class Game
     public int Score { get; private set; } = 0;
     public (int, int) Size { get; private set; }
 
-    public bool[,] map = new bool[16, 10];
+    public bool[,] fallenBlocksMap = new bool[16, 10];
 
     public Game((int, int) size)
     {
@@ -20,7 +21,6 @@ public class Game
 
         InitTimers();
         CurrentBlock = new Block();
-        Blocks.Add(CurrentBlock);
     }
 
     private void InitTimers()
@@ -38,9 +38,12 @@ public class Game
     {
         CurrentBlock.Move(0,1);
         RegenMap();
-        if (IsAtBottom())
+        if (IsAtBottom() || Colided())
         {
-            
+            Blocks.Add(CurrentBlock);
+            CurrentBlock = new Block();
+            Score++;
+            WindowManager.mainWindow.ChangeScore(Score);
         }
     }
 
@@ -53,13 +56,26 @@ public class Game
             {
                 if (CurrentBlock.Matrice[y, x])
                 {
-                    lowestY = y;
+                    lowestY = CurrentBlock.GetMapRelativePosition(x, y).y;
                 }
             }
         }
 
-        return lowestY == 15;
+        return lowestY > 14;
+    }
 
+    private bool Colided()
+    {
+        for (int y = 0; y < CurrentBlock.Matrice.GetLength(0); y++)
+        {
+            for (int x = 0; x < CurrentBlock.Matrice.GetLength(1); x++)
+            {
+                if (CurrentBlock.Matrice[y, x])
+                {
+                    
+                }
+            }
+        }
     }
 
     private void RegenMap()
@@ -80,7 +96,7 @@ public class Game
             }
         }
 
-        map = _map;
+        fallenBlocksMap = _map;
     }
 
     private void CheckCollision()
