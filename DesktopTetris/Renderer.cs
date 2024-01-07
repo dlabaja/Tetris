@@ -1,5 +1,6 @@
 using DesktopTetris.GtkWindows;
 using Gdk;
+using Application = Gtk.Application;
 using Timer = System.Timers.Timer;
 
 #pragma warning disable CS0612
@@ -9,60 +10,57 @@ namespace DesktopTetris;
 public static class Renderer
 {
     private static readonly int blockSize;
-    private static readonly int anchor;
+    private static readonly (int x, int y) anchor;
 
     private static Rectangle?[,] rectanglesOld = new Rectangle?[16, 10];
 
     static Renderer()
     {
         (int width, int height) desktopSize = (WindowManager.mainWindow.Screen.Width, WindowManager.mainWindow.Screen.Height);
-        blockSize = (int)Math.Round((double)desktopSize.height / 16);
-        anchor = (int)Math.Round(((double)desktopSize.width - 10 * blockSize) / 2);
+        blockSize = (int)Math.Round(((double)desktopSize.height - 100) / 16);
+        anchor = ((int)Math.Round(((double)desktopSize.width - 10 * blockSize) / 2), blockSize);
 
-        var frameTimer = new Timer(200);
+        var frameTimer = new Timer(50);
         frameTimer.Elapsed += (_, _) => PrintNewFrame();
         frameTimer.Start();
     }
 
     // converts relative grid coords to the coords on the screen
-    public static (int x, int y) RelativeToAbsoluteCoords((int x, int y) pos) => (anchor + pos.x * blockSize, pos.y * blockSize);
+    public static (int x, int y) RelativeToAbsoluteCoords((int x, int y) pos) => (anchor.x + pos.x * blockSize, pos.y * blockSize);
 
     private static void PrintNewFrame()
     {
         var rectanglesNew = new Rectangle?[16, 10];
 
+        // create rectangles for all blocks in the game
         foreach (var block in Program.currentGame.Blocks)
         {
             CalculateRectangles(block, ref rectanglesNew);
         }
+        
         CalculateRectangles(Program.currentGame.CurrentBlock, ref rectanglesNew);
         
         rectanglesNew = RemoveDuplicates(rectanglesNew); // passnutím listu se z nějakýho důvodu vytvoří reference
 
-        foreach (var window in WindowManager.windows)
+        // dispose unused windows by both new and old list
+        foreach (var (key, _) in WindowManager.windows)
         {
-            var key = window.Key;
-            if (rectanglesOld[key.Item2, key.Item1] != null || rectanglesNew[key.Item2, key.Item1] != null)
-                continue;
-            
-            try
-            {
-                WindowManager.windows.Remove(key);
-                window.Value.Hide();
-            }
-            catch {}
+            if (rectanglesOld[key.Item2, key.Item1] == null && rectanglesNew[key.Item2, key.Item1] == null)
+                WindowManager.DisposeWindow(key);
+
         }
 
+        // render windows left in new list
         for (int y = 0; y < 16; y++)
         {
             for (int x = 0; x < 10; x++)
             {
-                if (rectanglesNew[y, x] != null)
-                {
-                    var r = rectanglesNew[y, x]!.Value;
-                    WindowManager.GetNewWindow((r.posX, r.posY), (r.sizeX, r.sizeY), r.color);
-                    rectanglesOld[y, x] = r;
-                }
+                if (rectanglesNew[y, x] == null)
+                    continue;
+                
+                var r = rectanglesNew[y, x]!.Value;
+                WindowManager.GetNewWindow((r.posX, r.posY), (r.sizeX, r.sizeY), r.color);
+                rectanglesOld[y, x] = r;
             }
         }
     }
@@ -92,7 +90,6 @@ public static class Renderer
                     continue;
                 }
                 rectanglesNew[r.posY, r.posX] = r;
-                //Debug.WriteLine($"{r.posX};{r.posY}, {r.sizeX}x{r.sizeY}");
             }
         }
     }
@@ -103,7 +100,7 @@ public static class Renderer
         var r = new Rectangle();
         for (int i = x; i < matrice.GetLength(1); i++)
         {
-            if (matrice[y, i])
+            if (matrice[y, i] && !counted.Contains((i, y)))
             {
                 counted.Add((i, y));
                 r.sizeX += blockSize;
@@ -141,7 +138,7 @@ public static class Renderer
 
                 if (rectanglesNew[y, x] != null && rectanglesOld[y, x] != null)
                 {
-                    if (rectanglesNew[y, x].Value.Equals(rectanglesOld[y, x].Value))
+                    if (rectanglesNew[y, x]!.Value.Equals(rectanglesOld[y, x]!.Value))
                     {
                         rectanglesNew[y, x] = null;
                         continue;
@@ -149,9 +146,7 @@ public static class Renderer
                 }
 
                 if (rectanglesNew[y, x] == null && rectanglesOld[y, x] != null)
-                {
                     rectanglesOld[y, x] = null;
-                }
             }
         }
 

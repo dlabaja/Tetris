@@ -19,6 +19,8 @@ public static class Program
             Thread.Sleep(-1);
         }).Start();
         
+        //Settings.Default.SetProperty("gtk-enable-animations", new GLib.Value(false));
+        
         Application.Run();
     }
 }

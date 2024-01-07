@@ -1,6 +1,8 @@
 using DesktopTetris.GtkWindows;
 using Gdk;
+using Gtk;
 using System.Diagnostics;
+using System.Text;
 using System.Timers;
 using Timer = System.Timers.Timer;
 
@@ -32,47 +34,60 @@ public class Game
         var gameTimer = new Timer(1000);
         gameTimer.Elapsed += (_, _) => GameTime++;
         gameTimer.Start();
-        
-        blockFallTimer = new Timer(1000);
+
+        blockFallTimer = new Timer(400);
         blockFallTimer.Elapsed += (_, _) => MoveBlockDown();
         blockFallTimer.Start();
     }
 
     private void EndGame()
     {
-        Debug.WriteLine("end");
         blockFallTimer.Stop();
+
         foreach (var block in Blocks)
         {
             block.Color = new Color(128, 128, 128);
         }
-
-        CurrentBlock.Color = new Color(128, 128, 128);
+        
+        foreach (var (_, window) in WindowManager.windows)
+        {
+            window.ModifyBg(StateType.Normal, new Color(128, 128, 128));
+        }
     }
 
     private void SpawnNewBlock()
     {
         Blocks.Add(CurrentBlock);
-        CurrentBlock = new Block();
+        RegenMap();
         Score++;
         WindowManager.mainWindow.ChangeScore(Score);
+
+        var block = new Block();
         
-        for (int y = 0; y < CurrentBlock.Matrice.GetLength(0); y++)
+        // check if there is a room for block to spawn
+        for (int y = 0; y < block.Matrice.GetLength(0); y++)
         {
-            for (int x = 0; x < CurrentBlock.Matrice.GetLength(1); x++)
+            for (int x = 0; x < block.Matrice.GetLength(0); x++)
             {
-                var pos = CurrentBlock.GetMapRelativePosition(x, y);
-                if (CurrentBlock.Matrice[y, x] && fallenBlocksMap[pos.y, pos.x])
-                {
-                    EndGame();
-                }
+                var pos = block.GetMapRelativePosition(x, y);
+                if (!block.Matrice[y, x] || !fallenBlocksMap[pos.y, pos.x])
+                    continue;
+                EndGame();
+                return;
             }
         }
+
+        CurrentBlock = block;
     }
 
     private void MoveBlockDown()
     {
-        CurrentBlock.Move(0,1);
+        if (!blockFallTimer.Enabled)
+        {
+            return;
+        }
+        
+        CurrentBlock.Move(0, 1);
         RegenMap();
         if (IsAtBottom() || Collided())
         {
@@ -114,24 +129,48 @@ public class Game
         return false;
     }
 
+    private void PrintMap()
+    {
+        var s = new StringBuilder();
+        s.Append("--------");
+        for (int y = 0; y < 16; y++)
+        {
+            for (int x = 0; x < 10; x++)
+            {
+                if (fallenBlocksMap[y, x])
+                {
+                    s.Append("1");
+                    continue;
+                }
+                s.Append("0");
+            }
+            s.Append("\n");
+        }
+
+        s.Append("--------");
+        Debug.WriteLine(s);
+    }
+
     private void RegenMap()
     {
         var _map = new bool[16, 10];
         foreach (var block in Blocks)
         {
-            for (int x = 0; x < block.Matrice.GetLength(1); x++)
+            for (int y = 0; y < block.Matrice.GetLength(0); y++)
             {
-                for (int y = 0; y < block.Matrice.GetLength(0); y++)
+                for (int x = 0; x < block.Matrice.GetLength(1); x++)
                 {
                     var pos = block.GetMapRelativePosition(x, y);
-                    
+
                     if (pos.x is < 0 or >= 10 || pos.y is < 0 or >= 16)
                         continue;
-                    _map[pos.y, pos.x] = block.Matrice[y, x];
+
+                    if (block.Matrice[y, x])
+                        _map[pos.y, pos.x] = block.Matrice[y, x];
                 }
             }
         }
-
+        
         fallenBlocksMap = _map;
     }
 }

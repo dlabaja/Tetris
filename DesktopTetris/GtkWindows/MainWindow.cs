@@ -21,6 +21,12 @@ public class MainWindow : Window
         };
 
         KeepAbove = true;
+        GrabFocus();
+
+        FocusOutEvent += (o, args) =>
+        {
+            GrabFocus();
+        };
         
         scoreLabel = new Label("Score: 0");
         levelLabel = new Label("Level: 1");

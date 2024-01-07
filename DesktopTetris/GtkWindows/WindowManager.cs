@@ -1,4 +1,5 @@
 using Gdk;
+using Gtk;
 
 namespace DesktopTetris.GtkWindows;
 
@@ -12,12 +13,17 @@ public static class WindowManager
         mainWindow = new MainWindow();
     }
 
-    public static BlockWindow GetNewWindow((int x, int y) pos, (int x, int y) size, Color color)
+    public static void DisposeWindow((int, int) key)
     {
-        var window = new BlockWindow(Renderer.RelativeToAbsoluteCoords(pos), size, color);
+        Application.Invoke((_, _) => 
+        {
+            windows[key].Dispose();
+            windows.Remove(key);
+        });
+    }
 
-        windows[(pos.x, pos.y)] = window;
-
-        return window;
+    public static void GetNewWindow((int x, int y) pos, (int x, int y) size, Color color)
+    {
+        windows[(pos.x, pos.y)] = new BlockWindow(Renderer.RelativeToAbsoluteCoords(pos), size, color);;
     }
 }
