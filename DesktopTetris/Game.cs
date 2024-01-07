@@ -1,4 +1,6 @@
-using DesktopTetris.Gtk;
+using DesktopTetris.GtkWindows;
+using Gdk;
+using System.Diagnostics;
 using System.Timers;
 using Timer = System.Timers.Timer;
 
@@ -15,6 +17,8 @@ public class Game
 
     public bool[,] fallenBlocksMap = new bool[16, 10];
 
+    private Timer blockFallTimer;
+
     public Game((int, int) size)
     {
         Size = size;
@@ -29,21 +33,50 @@ public class Game
         gameTimer.Elapsed += (_, _) => GameTime++;
         gameTimer.Start();
         
-        var blockFallTimer = new Timer(1000);
+        blockFallTimer = new Timer(1000);
         blockFallTimer.Elapsed += (_, _) => MoveBlockDown();
         blockFallTimer.Start();
+    }
+
+    private void EndGame()
+    {
+        Debug.WriteLine("end");
+        blockFallTimer.Stop();
+        foreach (var block in Blocks)
+        {
+            block.Color = new Color(128, 128, 128);
+        }
+
+        CurrentBlock.Color = new Color(128, 128, 128);
+    }
+
+    private void SpawnNewBlock()
+    {
+        Blocks.Add(CurrentBlock);
+        CurrentBlock = new Block();
+        Score++;
+        WindowManager.mainWindow.ChangeScore(Score);
+        
+        for (int y = 0; y < CurrentBlock.Matrice.GetLength(0); y++)
+        {
+            for (int x = 0; x < CurrentBlock.Matrice.GetLength(1); x++)
+            {
+                var pos = CurrentBlock.GetMapRelativePosition(x, y);
+                if (CurrentBlock.Matrice[y, x] && fallenBlocksMap[pos.y, pos.x])
+                {
+                    EndGame();
+                }
+            }
+        }
     }
 
     private void MoveBlockDown()
     {
         CurrentBlock.Move(0,1);
         RegenMap();
-        if (IsAtBottom() || Colided())
+        if (IsAtBottom() || Collided())
         {
-            Blocks.Add(CurrentBlock);
-            CurrentBlock = new Block();
-            Score++;
-            WindowManager.mainWindow.ChangeScore(Score);
+            SpawnNewBlock();
         }
     }
 
@@ -64,18 +97,21 @@ public class Game
         return lowestY > 14;
     }
 
-    private bool Colided()
+    private bool Collided()
     {
         for (int y = 0; y < CurrentBlock.Matrice.GetLength(0); y++)
         {
             for (int x = 0; x < CurrentBlock.Matrice.GetLength(1); x++)
             {
-                if (CurrentBlock.Matrice[y, x])
+                var pos = CurrentBlock.GetMapRelativePosition(x, y);
+                if (CurrentBlock.Matrice[y, x] && fallenBlocksMap[pos.y + 1, pos.x])
                 {
-                    
+                    return true;
                 }
             }
         }
+
+        return false;
     }
 
     private void RegenMap()
@@ -97,15 +133,5 @@ public class Game
         }
 
         fallenBlocksMap = _map;
-    }
-
-    private void CheckCollision()
-    {
-        
-    }
-
-    private void EndGame()
-    {
-        
     }
 }

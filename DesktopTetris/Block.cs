@@ -50,7 +50,7 @@ public class Block
     }
 
     public readonly int[] AnchorPosition; // upper left corner
-    public Color Color { get; private set; }
+    public Color Color { get; set; }
     public bool[,] Matrice { get; private set; }
 
     private List<Color> colors = new List<Color>{

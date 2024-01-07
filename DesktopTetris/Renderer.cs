@@ -1,5 +1,5 @@
-using DesktopTetris.Gtk;
-using System.Diagnostics;
+using DesktopTetris.GtkWindows;
+using Gdk;
 using Timer = System.Timers.Timer;
 
 #pragma warning disable CS0612
@@ -42,14 +42,15 @@ public static class Renderer
         foreach (var window in WindowManager.windows)
         {
             var key = window.Key;
-            if (rectanglesOld[key.Item2, key.Item1] == null && rectanglesNew[key.Item2, key.Item1] == null)
+            if (rectanglesOld[key.Item2, key.Item1] != null || rectanglesNew[key.Item2, key.Item1] != null)
+                continue;
+            
+            try
             {
-                try
-                {
-                    window.Value.Dispose();
-                }
-                catch {}
+                WindowManager.windows.Remove(key);
+                window.Value.Hide();
             }
+            catch {}
         }
 
         for (int y = 0; y < 16; y++)
@@ -59,7 +60,7 @@ public static class Renderer
                 if (rectanglesNew[y, x] != null)
                 {
                     var r = rectanglesNew[y, x]!.Value;
-                    WindowManager.GetNewWindow((r.posX, r.posY), (r.sizeX, r.sizeY));
+                    WindowManager.GetNewWindow((r.posX, r.posY), (r.sizeX, r.sizeY), r.color);
                     rectanglesOld[y, x] = r;
                 }
             }
@@ -84,6 +85,7 @@ public static class Renderer
                 var r = GetRectSize(matrice, x, y, ref counted);
                 r.posX = pos.x;
                 r.posY = pos.y;
+                r.color = block.Color;
 
                 if (pos.y > 15)
                 {
@@ -163,6 +165,8 @@ public static class Renderer
 
         public int sizeX = 0;
         public int sizeY = blockSize;
+
+        public Color color;
 
         public Rectangle()
         {

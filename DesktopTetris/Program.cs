@@ -1,4 +1,4 @@
-﻿using DesktopTetris.Gtk;
+﻿using DesktopTetris.GtkWindows;
 using Gtk;
 using System.Runtime.CompilerServices;
 
@@ -18,6 +18,7 @@ public static class Program
             currentGame = new Game((20, 20));
             Thread.Sleep(-1);
         }).Start();
+        
         Application.Run();
     }
 }

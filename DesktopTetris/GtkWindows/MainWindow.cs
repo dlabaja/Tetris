@@ -1,6 +1,6 @@
 using Gtk;
 
-namespace DesktopTetris.Gtk;
+namespace DesktopTetris.GtkWindows;
 
 public class MainWindow : Window
 {
@@ -16,15 +16,12 @@ public class MainWindow : Window
         Move(0,0);
         DeleteEvent += (o, args) =>
         {
-            foreach (var window in Screen.ToplevelWindows)
-            {
-                window.Dispose();
-            }
-
             Application.Quit();
             Environment.Exit(0);
         };
 
+        KeepAbove = true;
+        
         scoreLabel = new Label("Score: 0");
         levelLabel = new Label("Level: 1");
         
