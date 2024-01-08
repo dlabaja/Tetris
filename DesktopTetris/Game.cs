@@ -51,7 +51,7 @@ public class Game
         
         foreach (var (_, window) in WindowManager.windows)
         {
-            window.ModifyBg(StateType.Normal, new Color(128, 128, 128));
+            Application.Invoke((_, _) => window.ModifyBg(StateType.Normal, new Color(128, 128, 128)));
         }
     }
 
@@ -82,6 +82,7 @@ public class Game
 
     private void MoveBlockDown()
     {
+        // game has ended
         if (!blockFallTimer.Enabled)
         {
             return;

@@ -18,9 +18,7 @@ public static class Program
             currentGame = new Game((20, 20));
             Thread.Sleep(-1);
         }).Start();
-        
-        //Settings.Default.SetProperty("gtk-enable-animations", new GLib.Value(false));
-        
+
         Application.Run();
     }
 }
