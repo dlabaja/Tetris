@@ -24,6 +24,9 @@ public static class WindowManager
 
     public static void GetNewWindow((int x, int y) pos, (int x, int y) size, Color color)
     {
-        windows[(pos.x, pos.y)] = new BlockWindow(Renderer.RelativeToAbsoluteCoords(pos), size, color);;
+        Application.Invoke((sender, args) =>
+        {
+            windows[(pos.x, pos.y)] = new BlockWindow(Renderer.RelativeToAbsoluteCoords(pos), size, color);;
+        });
     }
 }

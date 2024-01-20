@@ -47,7 +47,6 @@ public static class Renderer
         {
             if (rectanglesOld[key.Item2, key.Item1] == null && rectanglesNew[key.Item2, key.Item1] == null)
                 WindowManager.DisposeWindow(key);
-
         }
 
         // render windows left in new list

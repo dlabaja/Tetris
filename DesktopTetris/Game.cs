@@ -18,6 +18,8 @@ public class Game
     public (int, int) Size { get; private set; }
 
     public bool[,] fallenBlocksMap = new bool[16, 10];
+    public static int mapWidth;
+    public static int mapHeight;
 
     private Timer blockFallTimer;
 
@@ -57,6 +59,7 @@ public class Game
 
     private void SpawnNewBlock()
     {
+        CurrentBlock.UnhookEvents();
         Blocks.Add(CurrentBlock);
         RegenMap();
         Score++;
@@ -89,7 +92,6 @@ public class Game
         }
         
         CurrentBlock.Move(0, 1);
-        RegenMap();
         if (IsAtBottom() || Collided())
         {
             SpawnNewBlock();
@@ -152,7 +154,7 @@ public class Game
         Debug.WriteLine(s);
     }
 
-    private void RegenMap()
+    public void RegenMap()
     {
         var _map = new bool[16, 10];
         foreach (var block in Blocks)
