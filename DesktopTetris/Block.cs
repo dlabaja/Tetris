@@ -31,7 +31,7 @@ public class Block
     };
 
     private readonly int[] AnchorPosition; // upper left corner
-    public Color Color { get; set; }
+    public Color Color { get; private set; }
     public bool[,] Matrice { get; private set; }
 
     private readonly List<Color> colors = new List<Color>{
@@ -50,20 +50,16 @@ public class Block
     public Block()
     {
         Matrice = blockTypes[new Random().Next(blockTypes.Count)];
-        AnchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), 0};
+        AnchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), -Matrice.GetLength(0)};
         Color = colors[new Random().Next(colors.Count)];
 
-        Controls.DownPress += OnMoveDown;
-        Controls.LeftPress += OnMoveLeft;
-        Controls.RightPress += OnMoveRight;
-        Controls.RotatePress += OnRotate;
-        Game.currentGame!.GameEnded += OnGameEnded;
+        HookEvents();
     }
 
     private void OnGameEnded(object? sender, EventArgs e)
     {
-        Color = new Color(128, 128, 128);
         UnhookEvents();
+        Color = new Color(128, 128, 128);
     }
 
     private void OnRotate(object? sender, EventArgs e) => Rotate();
@@ -74,12 +70,22 @@ public class Block
 
     private void OnMoveRight(object? sender, EventArgs e) => Move(1, 0);
 
-    public void UnhookEvents()
+    private void HookEvents()
+    {
+        Controls.DownPress += OnMoveDown;
+        Controls.LeftPress += OnMoveLeft;
+        Controls.RightPress += OnMoveRight;
+        Controls.RotatePress += OnRotate;
+        Game.currentGame.GameEnded += OnGameEnded;
+    }
+
+    private void UnhookEvents()
     {
         Controls.DownPress -= OnMoveDown;
         Controls.LeftPress -= OnMoveLeft;
         Controls.RightPress -= OnMoveRight;
         Controls.RotatePress -= OnRotate;
+        Game.currentGame.GameEnded -= OnGameEnded;
     }
 
     private void Rotate()
@@ -107,6 +113,8 @@ public class Block
             UnhookEvents();
             Game.currentGame.SpawnNewBlock();
         }
+        
+        Game.currentGame.RegenMap();
     }
 
     private bool IsOutOfBorders(int xOffset, int yOffset)
@@ -151,6 +159,9 @@ public class Block
             for (int x = 0; x < Matrice.GetLength(1); x++)
             {
                 var pos = GetMapRelativePosition(x, y);
+                if (pos.y < 0)
+                    continue;
+
                 if (pos.y + 1 >= Game.mapHeight)
                     return true;
 

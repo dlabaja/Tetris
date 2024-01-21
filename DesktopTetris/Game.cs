@@ -10,7 +10,7 @@ namespace DesktopTetris;
 
 public class Game
 {
-    public static Game? currentGame;
+    public static Game currentGame = null!;
     public Block CurrentBlock { get; private set; }
     public List<Block> Blocks { get; } = new List<Block>();
     private int GameTime { get; set; }
@@ -46,7 +46,8 @@ public class Game
 
     private void OnGameEnded(object? sender, EventArgs e)
     {
-        blockFallTimer.Stop();
+        Console.WriteLine("end");
+        blockFallTimer.Dispose();
         
         Application.Invoke((_, _) =>
         {
@@ -58,48 +59,49 @@ public class Game
         
     }
 
+    private bool OutOfLimits()
+    {
+        for (int y = 0; y < CurrentBlock.Matrice.GetLength(0); y++)
+        {
+            for (int x = 0; x < CurrentBlock.Matrice.GetLength(0); x++)
+            {
+                var pos = CurrentBlock.GetMapRelativePosition(x, y);
+                if (pos.y < 0)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
     public void SpawnNewBlock()
     {
         Blocks.Add(CurrentBlock);
+
         Score++;
         WindowManager.mainWindow.ChangeScore(Score);
         
         RegenMap();
-
-        var block = new Block();
-
-        // check if there is a room for block to spawn
-        for (int y = 0; y < block.Matrice.GetLength(0); y++)
+        
+        if (OutOfLimits())
         {
-            for (int x = 0; x < block.Matrice.GetLength(0); x++)
-            {
-                var pos = block.GetMapRelativePosition(x, y);
-                if (!block.Matrice[y, x] || !fallenBlocksMap[pos.y, pos.x])
-                    continue;
-                
-                GameEnded.Invoke(this, EventArgs.Empty);
-                return;
-            }
+            GameEnded.Invoke(this, EventArgs.Empty);
+            return;
         }
 
+        var block = new Block();
         CurrentBlock = block;
     }
 
     private void MoveBlockDown()
     {
-        // game has ended
-        if (!blockFallTimer.Enabled)
-        {
-            return;
-        }
-
         CurrentBlock.Move(0, 1);
     }
 
-    private void PrintMap()
+    public void PrintMap()
     {
         var s = new StringBuilder();
-        s.Append("--------");
+        s.Append("--------\n");
         for (int y = 0; y < 16; y++)
         {
             for (int x = 0; x < 10; x++)

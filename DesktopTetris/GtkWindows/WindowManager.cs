@@ -17,14 +17,20 @@ public static class WindowManager
     {
         Application.Invoke((_, _) => 
         {
-            windows[key].Dispose();
-            windows.Remove(key);
+            try
+            {
+                windows[key].Dispose();
+                windows.Remove(key);
+            }
+            catch{}
         });
     }
 
     public static void CleanRemnants()
     {
-        foreach (var window in GetAllBlockWindows().Where(window => !windows.Values.Contains(window)))
+        var values = windows.Values;
+        var gtkWindows = GetAllBlockWindows();
+        foreach (var window in gtkWindows.Where(window => !values.Contains(window)))
         {
             window.Dispose();
         }

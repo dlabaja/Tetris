@@ -9,7 +9,7 @@ namespace DesktopTetris;
 
 public static class Renderer
 {
-    public static int fps = 50;
+    private const int framePeriod = 20;
     private static readonly int blockSize;
     private static readonly (int x, int y) anchor;
 
@@ -21,7 +21,7 @@ public static class Renderer
         blockSize = (int)Math.Round(((double)desktopSize.height - 100) / 16);
         anchor = ((int)Math.Round(((double)desktopSize.width - 10 * blockSize) / 2), blockSize);
 
-        var frameTimer = new Timer(fps);
+        var frameTimer = new Timer(framePeriod);
         frameTimer.Elapsed += (_, _) => PrintNewFrame();
         frameTimer.Start();
     }
