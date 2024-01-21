@@ -6,8 +6,6 @@ namespace DesktopTetris;
 
 public static class Program
 {
-    public static Game currentGame;
-
     private static void Main()
     {
         Application.Init();
@@ -15,7 +13,7 @@ public static class Program
         {
             RuntimeHelpers.RunClassConstructor(typeof(Renderer).TypeHandle);
             RuntimeHelpers.RunClassConstructor(typeof(WindowManager).TypeHandle);
-            currentGame = new Game((20, 20));
+            var g = new Game();
             Thread.Sleep(-1);
         }).Start();
 

@@ -10,25 +10,27 @@ namespace DesktopTetris;
 
 public class Game
 {
+    public static Game? currentGame;
     public Block CurrentBlock { get; private set; }
-    public List<Block> Blocks { get; private set; } = new List<Block>();
-    public int GameTime { get; private set; } = 0;
+    public List<Block> Blocks { get; } = new List<Block>();
+    private int GameTime { get; set; }
     public int Level { get; private set; } = 1;
-    public int Score { get; private set; } = 0;
-    public (int, int) Size { get; private set; }
+    private int Score { get; set; }
 
     public bool[,] fallenBlocksMap = new bool[16, 10];
-    public static int mapWidth;
-    public static int mapHeight;
+    public const int mapWidth = 10;
+    public const int mapHeight = 16;
+    public event EventHandler GameEnded;
 
     private Timer blockFallTimer;
 
-    public Game((int, int) size)
+    public Game()
     {
-        Size = size;
-
+        currentGame = this;
         InitTimers();
         CurrentBlock = new Block();
+
+        GameEnded += OnGameEnded;
     }
 
     private void InitTimers()
@@ -42,31 +44,30 @@ public class Game
         blockFallTimer.Start();
     }
 
-    private void EndGame()
+    private void OnGameEnded(object? sender, EventArgs e)
     {
         blockFallTimer.Stop();
-
-        foreach (var block in Blocks)
-        {
-            block.Color = new Color(128, 128, 128);
-        }
         
-        foreach (var (_, window) in WindowManager.windows)
+        Application.Invoke((_, _) =>
         {
-            Application.Invoke((_, _) => window.ModifyBg(StateType.Normal, new Color(128, 128, 128)));
-        }
+            foreach (var window in WindowManager.GetAllBlockWindows())
+            {
+                window.ModifyBg(StateType.Normal, new Color(128, 128, 128));
+            }
+        });
+        
     }
 
-    private void SpawnNewBlock()
+    public void SpawnNewBlock()
     {
-        CurrentBlock.UnhookEvents();
         Blocks.Add(CurrentBlock);
-        RegenMap();
         Score++;
         WindowManager.mainWindow.ChangeScore(Score);
+        
+        RegenMap();
 
         var block = new Block();
-        
+
         // check if there is a room for block to spawn
         for (int y = 0; y < block.Matrice.GetLength(0); y++)
         {
@@ -75,7 +76,8 @@ public class Game
                 var pos = block.GetMapRelativePosition(x, y);
                 if (!block.Matrice[y, x] || !fallenBlocksMap[pos.y, pos.x])
                     continue;
-                EndGame();
+                
+                GameEnded.Invoke(this, EventArgs.Empty);
                 return;
             }
         }
@@ -90,46 +92,8 @@ public class Game
         {
             return;
         }
-        
+
         CurrentBlock.Move(0, 1);
-        if (IsAtBottom() || Collided())
-        {
-            SpawnNewBlock();
-        }
-    }
-
-    private bool IsAtBottom()
-    {
-        var lowestY = 0;
-        for (int y = 0; y < CurrentBlock.Matrice.GetLength(0); y++)
-        {
-            for (int x = 0; x < CurrentBlock.Matrice.GetLength(1); x++)
-            {
-                if (CurrentBlock.Matrice[y, x])
-                {
-                    lowestY = CurrentBlock.GetMapRelativePosition(x, y).y;
-                }
-            }
-        }
-
-        return lowestY > 14;
-    }
-
-    private bool Collided()
-    {
-        for (int y = 0; y < CurrentBlock.Matrice.GetLength(0); y++)
-        {
-            for (int x = 0; x < CurrentBlock.Matrice.GetLength(1); x++)
-            {
-                var pos = CurrentBlock.GetMapRelativePosition(x, y);
-                if (CurrentBlock.Matrice[y, x] && fallenBlocksMap[pos.y + 1, pos.x])
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     private void PrintMap()
@@ -145,8 +109,10 @@ public class Game
                     s.Append("1");
                     continue;
                 }
+
                 s.Append("0");
             }
+
             s.Append("\n");
         }
 
@@ -173,7 +139,7 @@ public class Game
                 }
             }
         }
-        
+
         fallenBlocksMap = _map;
     }
 }

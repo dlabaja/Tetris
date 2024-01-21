@@ -9,6 +9,7 @@ namespace DesktopTetris;
 
 public static class Renderer
 {
+    public static int fps = 50;
     private static readonly int blockSize;
     private static readonly (int x, int y) anchor;
 
@@ -20,7 +21,7 @@ public static class Renderer
         blockSize = (int)Math.Round(((double)desktopSize.height - 100) / 16);
         anchor = ((int)Math.Round(((double)desktopSize.width - 10 * blockSize) / 2), blockSize);
 
-        var frameTimer = new Timer(50);
+        var frameTimer = new Timer(fps);
         frameTimer.Elapsed += (_, _) => PrintNewFrame();
         frameTimer.Start();
     }
@@ -33,12 +34,12 @@ public static class Renderer
         var rectanglesNew = new Rectangle?[16, 10];
 
         // create rectangles for all blocks in the game
-        foreach (var block in Program.currentGame.Blocks)
+        foreach (var block in Game.currentGame.Blocks)
         {
             CalculateRectangles(block, ref rectanglesNew);
         }
         
-        CalculateRectangles(Program.currentGame.CurrentBlock, ref rectanglesNew);
+        CalculateRectangles(Game.currentGame.CurrentBlock, ref rectanglesNew);
         
         rectanglesNew = RemoveDuplicates(rectanglesNew); // passnutím listu se z nějakýho důvodu vytvoří reference
 
@@ -48,6 +49,7 @@ public static class Renderer
             if (rectanglesOld[key.Item2, key.Item1] == null && rectanglesNew[key.Item2, key.Item1] == null)
                 WindowManager.DisposeWindow(key);
         }
+        WindowManager.CleanRemnants();
 
         // render windows left in new list
         for (int y = 0; y < 16; y++)

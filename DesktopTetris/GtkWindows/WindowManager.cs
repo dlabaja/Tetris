@@ -22,11 +22,21 @@ public static class WindowManager
         });
     }
 
+    public static void CleanRemnants()
+    {
+        foreach (var window in GetAllBlockWindows().Where(window => !windows.Values.Contains(window)))
+        {
+            window.Dispose();
+        }
+    }
+
     public static void GetNewWindow((int x, int y) pos, (int x, int y) size, Color color)
     {
-        Application.Invoke((sender, args) =>
+        Application.Invoke((_, _) =>
         {
-            windows[(pos.x, pos.y)] = new BlockWindow(Renderer.RelativeToAbsoluteCoords(pos), size, color);;
+            windows[(pos.x, pos.y)] = new BlockWindow(Renderer.RelativeToAbsoluteCoords(pos), size, color);
         });
     }
+
+    public static List<Gtk.Window> GetAllBlockWindows() => Gtk.Window.ListToplevels().Where(x => x.GetType() != typeof(MainWindow)).ToList();
 }
