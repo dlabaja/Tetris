@@ -17,7 +17,7 @@ public class Game
     public int Level { get; private set; } = 1;
     private int Score { get; set; }
 
-    public bool[,] fallenBlocksMap = new bool[16, 10];
+    public bool[,] fallenBlocksMap = new bool[mapHeight, mapWidth];
     public const int mapWidth = 10;
     public const int mapHeight = 16;
     public event EventHandler GameEnded;
@@ -46,30 +46,15 @@ public class Game
 
     private void OnGameEnded(object? sender, EventArgs e)
     {
-        Console.WriteLine("end");
-        blockFallTimer.Dispose();
-        
-        Application.Invoke((_, _) =>
-        {
-            foreach (var window in WindowManager.GetAllBlockWindows())
-            {
-                window.ModifyBg(StateType.Normal, new Color(128, 128, 128));
-            }
-        });
+        blockFallTimer.Stop();
         
     }
 
-    private bool OutOfLimits()
+    private bool NoRoomForNewBlock()
     {
-        for (int y = 0; y < CurrentBlock.Matrice.GetLength(0); y++)
-        {
-            for (int x = 0; x < CurrentBlock.Matrice.GetLength(0); x++)
-            {
-                var pos = CurrentBlock.GetMapRelativePosition(x, y);
-                if (pos.y < 0)
-                    return true;
-            }
-        }
+        for (int x = 0; x < mapWidth; x++)
+            if (fallenBlocksMap[0, x])
+                return true;
 
         return false;
     }
@@ -80,17 +65,16 @@ public class Game
 
         Score++;
         WindowManager.mainWindow.ChangeScore(Score);
-        
+
         RegenMap();
         
-        if (OutOfLimits())
+        if (NoRoomForNewBlock())
         {
             GameEnded.Invoke(this, EventArgs.Empty);
             return;
         }
-
-        var block = new Block();
-        CurrentBlock = block;
+        
+        CurrentBlock = new Block();
     }
 
     private void MoveBlockDown()
