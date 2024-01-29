@@ -33,8 +33,10 @@ public static class Renderer
     {
         var rectanglesNew = new Rectangle?[16, 10];
 
+        var blocks = Game.currentGame.Blocks.ToArray();
+
         // create rectangles for all blocks in the game
-        foreach (var block in Game.currentGame.Blocks)
+        foreach (var block in blocks)
         {
             CalculateRectangles(block, ref rectanglesNew);
         }

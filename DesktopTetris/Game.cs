@@ -21,8 +21,9 @@ public class Game
     public const int mapWidth = 10;
     public const int mapHeight = 16;
     public event EventHandler GameEnded;
+    public event EventHandler MoveDownTimer;
 
-    private Timer blockFallTimer;
+    private Timer moveDownTimer;
 
     public Game()
     {
@@ -39,15 +40,15 @@ public class Game
         gameTimer.Elapsed += (_, _) => GameTime++;
         gameTimer.Start();
 
-        blockFallTimer = new Timer(400);
-        blockFallTimer.Elapsed += (_, _) => MoveBlockDown();
-        blockFallTimer.Start();
+        moveDownTimer = new Timer(400);
+        moveDownTimer.Elapsed += (_, _) => MoveDownTimer.Invoke(this, EventArgs.Empty);
+        moveDownTimer.Start();
     }
 
     private void OnGameEnded(object? sender, EventArgs e)
     {
-        blockFallTimer.Stop();
-        
+        moveDownTimer.Stop();
+
     }
 
     private bool NoRoomForNewBlock()
@@ -67,7 +68,9 @@ public class Game
         WindowManager.mainWindow.ChangeScore(Score);
 
         RegenMap();
-        
+        RemoveFilledParts();
+        RegenMap();
+
         if (NoRoomForNewBlock())
         {
             GameEnded.Invoke(this, EventArgs.Empty);
@@ -75,11 +78,6 @@ public class Game
         }
         
         CurrentBlock = new Block();
-    }
-
-    private void MoveBlockDown()
-    {
-        CurrentBlock.Move(0, 1);
     }
 
     public void PrintMap()
@@ -104,6 +102,107 @@ public class Game
 
         s.Append("--------");
         Debug.WriteLine(s);
+    }
+
+    private List<int> GetFilledRowsIndexes()
+    {
+        var filledRows = new List<int>();
+        for (int y = 0; y < fallenBlocksMap.GetLength(0); y++)
+        {
+            var filled = true;
+            for (int x = 0; x < fallenBlocksMap.GetLength(1); x++)
+            {
+                if (fallenBlocksMap[y, x])
+                    continue;
+
+                filled = false;
+                break;
+            }
+
+            if (filled)
+            {
+                filledRows.Add(y);
+            }
+        }
+
+        return filledRows;
+    }
+
+    private void RemoveFilledParts()
+    {
+        var affectedBlocks = new List<Block>();
+        var rows = GetFilledRowsIndexes();
+        
+        if (!rows.Any())
+            return;
+        
+        foreach (var block in Blocks)
+        {
+            for (int y = 0; y < block.Matrice.GetLength(0); y++)
+            {
+                if (!rows.Contains(block.GetMapRelativePosition(0, y).y))
+                    continue;
+
+                for (int x = 0; x < block.Matrice.GetLength(1); x++)
+                    block.Matrice[y, x] = false;
+
+                if (!affectedBlocks.Contains(block))
+                {
+                    affectedBlocks.Add(block);
+                }
+            }
+        }
+
+        foreach (var block in affectedBlocks)
+        {
+            SplitBlocks(block);
+        }
+    }
+
+    private void SplitBlocks(Block block)
+    {
+        var newMatrice = new bool[block.Matrice.GetLength(0), block.Matrice.GetLength(1)];
+        for (int y = 0; y < block.Matrice.GetLength(0); y++)
+        {
+            var emptyRow = true;
+
+            for (int x = 0; x < block.Matrice.GetLength(1); x++)
+            {
+                if (block.Matrice[y, x])
+                {
+                    emptyRow = false;
+                    newMatrice[y, x] = true;
+                }
+            }
+
+            if (emptyRow || y == block.Matrice.GetLength(0) - 1)
+            {
+                if (IsMatriceEmpty(newMatrice))
+                {
+                    newMatrice = new bool[block.Matrice.GetLength(0), block.Matrice.GetLength(1)];
+                    continue;
+                }
+                
+                var anchor = block.GetMapRelativePosition(0, y);
+                Debug.WriteLine(anchor.y);
+                Blocks.Add(new Block(newMatrice, 
+                    new []{anchor.x, anchor.y},
+                    block.Color,
+                    true));
+                newMatrice = new bool[block.Matrice.GetLength(0), block.Matrice.GetLength(1)];
+            }
+        }
+
+        Blocks.Remove(block);
+    }
+
+    private bool IsMatriceEmpty(bool[,] matrice)
+    {
+        for (int x = 0; x < matrice.GetLength(1); x++)
+        for (int y = 0; y < matrice.GetLength(0); y++)
+            if (matrice[y, x])
+                return false;
+        return true;
     }
 
     public void RegenMap()

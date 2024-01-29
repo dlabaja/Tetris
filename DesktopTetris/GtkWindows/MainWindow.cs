@@ -50,7 +50,6 @@ public class MainWindow : Window
     [GLib.ConnectBefore]
     private static void KeyPress(object sender, KeyPressEventArgs args)
     {
-        //Console.WriteLine(args.Event.Key);
         Controls.CallAction(args.Event.Key);
     }
 }

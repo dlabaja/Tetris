@@ -1,12 +1,14 @@
 using Gdk;
 using Gtk;
+using System.Diagnostics;
+using Window = Gtk.Window;
 
 namespace DesktopTetris.GtkWindows;
 
 public static class WindowManager
 {
-    public static MainWindow mainWindow;
-    public static Dictionary<(int, int), BlockWindow> windows = new Dictionary<(int, int), BlockWindow>();
+    public static readonly MainWindow mainWindow;
+    public static readonly Dictionary<(int, int), BlockWindow> windows = new Dictionary<(int, int), BlockWindow>();
 
     static WindowManager()
     {
@@ -44,5 +46,16 @@ public static class WindowManager
         });
     }
 
-    public static List<Gtk.Window> GetAllBlockWindows() => Gtk.Window.ListToplevels().Where(x => x.GetType() != typeof(MainWindow)).ToList();
+    private static IEnumerable<Window> GetAllBlockWindows()
+    {
+        try
+        {
+            return Window.ListToplevels().Where(x => x.GetType() != typeof(MainWindow)).ToList();
+        }
+        catch
+        {
+            Debug.WriteLine("window chyba");
+            return Window.ListToplevels().Where(x => x.GetType() != typeof(MainWindow)).ToList();
+        }
+    }
 }

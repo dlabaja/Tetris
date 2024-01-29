@@ -5,18 +5,20 @@ namespace DesktopTetris;
 public class Block
 {
     private readonly List<bool[,]> blockTypes = new List<bool[,]>{
-        new[,]{
+        /*new[,]{
             {false, false, true},
             {true, true, true},
+        },*/
+        new[,]{
+            {false, false, false, false, false},
+            {false, true, true, true, true},
         },
         new[,]{
-            {true, true, true, true},
+            {true, true, false},
+            {true, true, false},
+            {false, false, false}
         },
-        new[,]{
-            {true, true},
-            {true, true}
-        },
-        new[,]{
+        /*new[,]{
             {false, true, true},
             {true, true, false},
         },
@@ -27,12 +29,13 @@ public class Block
         new[,]{
             {true, false, false},
             {true, true, true},
-        },
+        },*/
     };
 
     private readonly int[] AnchorPosition; // upper left corner
     public Color Color { get; private set; }
     public bool[,] Matrice { get; private set; }
+    private bool isDisabled;
 
     private readonly List<Color> colors = new List<Color>{
         new Color(3, 65, 174),
@@ -47,11 +50,12 @@ public class Block
         return (AnchorPosition[0] + x, AnchorPosition[1] + y);
     }
 
-    public Block()
+    public Block(bool[,]? matrice = null, int[]? anchorPosition = null, Color? color = null, bool isDisabled = false)
     {
-        Matrice = blockTypes[new Random().Next(blockTypes.Count)];
-        AnchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), -Matrice.GetLength(0)};
-        Color = colors[new Random().Next(colors.Count)];
+        Matrice = matrice ?? blockTypes[new Random().Next(blockTypes.Count)];
+        AnchorPosition = anchorPosition ?? new[]{(int)Math.Round((double)Game.mapWidth / 2), -Matrice.GetLength(0)};
+        Color = color ?? colors[new Random().Next(colors.Count)];
+        this.isDisabled = isDisabled;
 
         HookEvents();
     }
@@ -59,7 +63,9 @@ public class Block
     private void OnGameEnded(object? sender, EventArgs e)
     {
         Color = new Color(128, 128, 128);
+        
         Game.currentGame.GameEnded -= OnGameEnded;
+        Game.currentGame.MoveDownTimer -= OnMoveDown;
     }
 
     private void OnRotate(object? sender, EventArgs e) => Rotate();
@@ -76,10 +82,11 @@ public class Block
         Controls.LeftPress += OnMoveLeft;
         Controls.RightPress += OnMoveRight;
         Controls.RotatePress += OnRotate;
+        Game.currentGame.MoveDownTimer += OnMoveDown; 
         Game.currentGame.GameEnded += OnGameEnded;
     }
 
-    private void DisableBlock()
+    private void DisableInput()
     {
         Controls.DownPress -= OnMoveDown;
         Controls.LeftPress -= OnMoveLeft;
@@ -103,7 +110,7 @@ public class Block
             Matrice = oldMatrice;
     }
 
-    public void Move(int xOffset, int yOffset)
+    private void Move(int xOffset, int yOffset)
     {
         AnchorPosition[0] += xOffset;
         AnchorPosition[1] += yOffset;
@@ -112,12 +119,13 @@ public class Block
         {
             AnchorPosition[0] -= xOffset;
             AnchorPosition[1] -= yOffset;
-        }
 
-        if (IsAtBottom() || CollidedFromBottom())
-        {
-            DisableBlock();
-            Game.currentGame.SpawnNewBlock();
+            if ((IsAtBottom() || CollidedFromBottom()) && !isDisabled)
+            {
+                isDisabled = true;
+                DisableInput();
+                Game.currentGame.SpawnNewBlock();
+            }
         }
     }
 
@@ -163,13 +171,13 @@ public class Block
             for (int x = 0; x < Matrice.GetLength(1); x++)
             {
                 var pos = GetMapRelativePosition(x, y);
-                if (pos.y < 0)
+                if (pos.y < 0 || !Matrice[y, x])
                     continue;
 
                 if (pos.y + 1 >= Game.mapHeight)
                     return true;
 
-                if (Matrice[y, x] && fallenBlocksMap[pos.y + 1, pos.x])
+                if (fallenBlocksMap[pos.y + 1, pos.x])
                     return true;
             }
         }
@@ -185,10 +193,10 @@ public class Block
             for (int x = 0; x < Matrice.GetLength(1); x++)
             {
                 var pos = GetMapRelativePosition(x, y);
-                if (pos.y < 0)
+                if (pos.y < 0 || !Matrice[y, x])
                     continue;
 
-                if (Matrice[y, x] && fallenBlocksMap[pos.y, pos.x])
+                if (fallenBlocksMap[pos.y, pos.x])
                     return true;
             }
         }
