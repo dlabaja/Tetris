@@ -21,7 +21,6 @@ public class Game
     public const int mapWidth = 10;
     public const int mapHeight = 16;
     public event EventHandler GameEnded;
-    public event EventHandler MoveDownTimer;
 
     private Timer moveDownTimer;
 
@@ -41,9 +40,18 @@ public class Game
         gameTimer.Start();
 
         moveDownTimer = new Timer(400);
-        moveDownTimer.Elapsed += (_, _) => MoveDownTimer.Invoke(this, EventArgs.Empty);
+        moveDownTimer.Elapsed += OnMoveDownTimerOnElapsed;
         moveDownTimer.Start();
     }
+
+    private void OnMoveDownTimerOnElapsed(object o, ElapsedEventArgs elapsedEventArgs)
+    {
+        // move statickejch
+        // move current
+        MoveDownTimer.Invoke(this, EventArgs.Empty);
+    }
+    
+    private List<Block>
 
     private void OnGameEnded(object? sender, EventArgs e)
     {
@@ -66,10 +74,11 @@ public class Game
 
         Score++;
         WindowManager.mainWindow.ChangeScore(Score);
-
+        
         RegenMap();
         RemoveFilledParts();
         RegenMap();
+        
 
         if (NoRoomForNewBlock())
         {

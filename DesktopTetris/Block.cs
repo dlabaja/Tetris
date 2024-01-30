@@ -65,7 +65,6 @@ public class Block
         Color = new Color(128, 128, 128);
         
         Game.currentGame.GameEnded -= OnGameEnded;
-        Game.currentGame.MoveDownTimer -= OnMoveDown;
     }
 
     private void OnRotate(object? sender, EventArgs e) => Rotate();
@@ -82,7 +81,6 @@ public class Block
         Controls.LeftPress += OnMoveLeft;
         Controls.RightPress += OnMoveRight;
         Controls.RotatePress += OnRotate;
-        Game.currentGame.MoveDownTimer += OnMoveDown; 
         Game.currentGame.GameEnded += OnGameEnded;
     }
 
@@ -110,7 +108,7 @@ public class Block
             Matrice = oldMatrice;
     }
 
-    private void Move(int xOffset, int yOffset)
+    public void Move(int xOffset, int yOffset)
     {
         AnchorPosition[0] += xOffset;
         AnchorPosition[1] += yOffset;
