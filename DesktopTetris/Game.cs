@@ -11,8 +11,7 @@ namespace DesktopTetris;
 public class Game
 {
     public static Game currentGame = null!;
-    public Block CurrentBlock { get; private set; }
-    public List<Block> Blocks { get; } = new List<Block>();
+    public List<Block> Blocks { get; set; } = new List<Block>();
     private int GameTime { get; set; }
     public int Level { get; private set; } = 1;
     private int Score { get; set; }
@@ -28,7 +27,7 @@ public class Game
     {
         currentGame = this;
         InitTimers();
-        CurrentBlock = new Block();
+        Blocks.Add(new Block());
 
         GameEnded += OnGameEnded;
     }
@@ -44,14 +43,47 @@ public class Game
         moveDownTimer.Start();
     }
 
-    private void OnMoveDownTimerOnElapsed(object o, ElapsedEventArgs elapsedEventArgs)
+    private void OnMoveDownTimerOnElapsed(object? o, ElapsedEventArgs elapsedEventArgs)
     {
-        // move statickejch
-        // move current
-        MoveDownTimer.Invoke(this, EventArgs.Empty);
+        Console.WriteLine(Blocks.Count);
+        var ghostBlocks = Blocks.ToList();
+        Blocks.Clear();
+        RegenMap();
+
+        foreach (var block in GenerateBottomToTopBlockList(ghostBlocks.ToList()))
+        {
+            block.MoveDown();
+            Blocks.Add(block);
+            RegenMap();
+        }
+
+        Blocks = ghostBlocks;
     }
-    
-    private List<Block>
+
+    private List<Block> GenerateBottomToTopBlockList(IReadOnlyCollection<Block> blocks)
+    {
+        var list = new List<Block>();
+        for (int y = fallenBlocksMap.GetLength(0) - 1; y >= 0; y--)
+        {
+            for (int x = 0; x < fallenBlocksMap.GetLength(1); x++)
+            {
+                var block = blocks.FirstOrDefault(l => l.ContainsMapRelativePosition(x, y));
+                if (block == default)
+                    continue;
+
+                if (!list.Contains(block))
+                    list.Add(block);
+            }
+        }
+
+        foreach (var block in blocks)
+        {
+            if (!list.Contains(block))
+                list.Add(block);
+        }
+        
+        return list;
+    }
 
     private void OnGameEnded(object? sender, EventArgs e)
     {
@@ -70,8 +102,6 @@ public class Game
 
     public void SpawnNewBlock()
     {
-        Blocks.Add(CurrentBlock);
-
         Score++;
         WindowManager.mainWindow.ChangeScore(Score);
         
@@ -79,14 +109,15 @@ public class Game
         RemoveFilledParts();
         RegenMap();
         
-
+        
         if (NoRoomForNewBlock())
         {
             GameEnded.Invoke(this, EventArgs.Empty);
             return;
         }
         
-        CurrentBlock = new Block();
+        Blocks.Add(new Block());
+        Console.WriteLine($"bloky {Blocks.Count}");
     }
 
     public void PrintMap()
@@ -193,11 +224,10 @@ public class Game
                 }
                 
                 var anchor = block.GetMapRelativePosition(0, y);
-                Debug.WriteLine(anchor.y);
-                Blocks.Add(new Block(newMatrice, 
-                    new []{anchor.x, anchor.y},
-                    block.Color,
-                    true));
+                Blocks.Add(new SplitBlock(newMatrice,
+                    (anchor.x, anchor.y),
+                    block.Color));
+                
                 newMatrice = new bool[block.Matrice.GetLength(0), block.Matrice.GetLength(1)];
             }
         }

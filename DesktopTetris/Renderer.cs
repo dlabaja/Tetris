@@ -40,9 +40,7 @@ public static class Renderer
         {
             CalculateRectangles(block, ref rectanglesNew);
         }
-        
-        CalculateRectangles(Game.currentGame.CurrentBlock, ref rectanglesNew);
-        
+
         rectanglesNew = RemoveDuplicates(rectanglesNew); // passnutím listu se z nějakýho důvodu vytvoří reference
 
         // dispose unused windows by both new and old list

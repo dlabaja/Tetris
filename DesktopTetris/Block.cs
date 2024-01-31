@@ -10,13 +10,11 @@ public class Block
             {true, true, true},
         },*/
         new[,]{
-            {false, false, false, false, false},
-            {false, true, true, true, true},
+            {true, true, true, true}
         },
         new[,]{
-            {true, true, false},
-            {true, true, false},
-            {false, false, false}
+            {true, true},
+            {true, true}
         },
         /*new[,]{
             {false, true, true},
@@ -32,10 +30,10 @@ public class Block
         },*/
     };
 
-    private readonly int[] AnchorPosition; // upper left corner
-    public Color Color { get; private set; }
-    public bool[,] Matrice { get; private set; }
-    private bool isDisabled;
+    protected int[] AnchorPosition; // upper left corner
+    public Color Color { get; protected set; }
+    public bool[,] Matrice { get; protected set; }
+    public bool isDisabled;
 
     private readonly List<Color> colors = new List<Color>{
         new Color(3, 65, 174),
@@ -50,17 +48,16 @@ public class Block
         return (AnchorPosition[0] + x, AnchorPosition[1] + y);
     }
 
-    public Block(bool[,]? matrice = null, int[]? anchorPosition = null, Color? color = null, bool isDisabled = false)
+    public Block()
     {
-        Matrice = matrice ?? blockTypes[new Random().Next(blockTypes.Count)];
-        AnchorPosition = anchorPosition ?? new[]{(int)Math.Round((double)Game.mapWidth / 2), -Matrice.GetLength(0)};
-        Color = color ?? colors[new Random().Next(colors.Count)];
-        this.isDisabled = isDisabled;
+        Matrice = blockTypes[new Random().Next(blockTypes.Count)];
+        AnchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), -Matrice.GetLength(0)};
+        Color = colors[new Random().Next(colors.Count)];
 
         HookEvents();
     }
 
-    private void OnGameEnded(object? sender, EventArgs e)
+    protected void OnGameEnded(object? sender, EventArgs e)
     {
         Color = new Color(128, 128, 128);
         
@@ -69,11 +66,11 @@ public class Block
 
     private void OnRotate(object? sender, EventArgs e) => Rotate();
 
-    private void OnMoveDown(object? sender, EventArgs e) => Move(0, 1);
+    protected void OnMoveDown(object? sender, EventArgs e) => MoveDown();
 
-    private void OnMoveLeft(object? sender, EventArgs e) => Move(-1, 0);
+    private void OnMoveLeft(object? sender, EventArgs e) => Move(-1);
 
-    private void OnMoveRight(object? sender, EventArgs e) => Move(1, 0);
+    private void OnMoveRight(object? sender, EventArgs e) => Move(1);
 
     private void HookEvents()
     {
@@ -84,12 +81,27 @@ public class Block
         Game.currentGame.GameEnded += OnGameEnded;
     }
 
-    private void DisableInput()
+    protected void DisableInput()
     {
         Controls.DownPress -= OnMoveDown;
         Controls.LeftPress -= OnMoveLeft;
         Controls.RightPress -= OnMoveRight;
         Controls.RotatePress -= OnRotate;
+    }
+
+    public bool ContainsMapRelativePosition(int xPos, int yPos)
+    {
+        for (int x = 0; x < Matrice.GetLength(1); x++)
+        for (int y = 0; y < Matrice.GetLength(0); y++)
+        {
+            var pos = GetMapRelativePosition(x, y);
+            if (pos.x == xPos && pos.y == yPos)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void Rotate()
@@ -104,27 +116,34 @@ public class Block
 
         Matrice = newMatrice;
 
-        if (IsOutOfBorders() || CollidedFromSide())
+        if (IsOutOfBorders() || Collided())
             Matrice = oldMatrice;
     }
 
-    public void Move(int xOffset, int yOffset)
+    public void MoveDown()
     {
-        AnchorPosition[0] += xOffset;
-        AnchorPosition[1] += yOffset;
+        AnchorPosition[1] += 1;
 
-        if (IsOutOfBorders() || CollidedFromSide())
+        if (IsAtBottom() || Collided())
         {
-            AnchorPosition[0] -= xOffset;
-            AnchorPosition[1] -= yOffset;
+            AnchorPosition[1] -= 1;
 
-            if ((IsAtBottom() || CollidedFromBottom()) && !isDisabled)
+            if (!isDisabled)
             {
                 isDisabled = true;
                 DisableInput();
                 Game.currentGame.SpawnNewBlock();
             }
         }
+
+        Console.WriteLine(isDisabled);
+    }
+
+    private void Move(int xOffset)
+    {
+        AnchorPosition[0] += xOffset;
+        if (IsOutOfBorders() || Collided())
+            AnchorPosition[0] -= xOffset;
     }
 
     private bool IsOutOfBorders()
@@ -158,7 +177,7 @@ public class Block
             }
         }
 
-        return lowestY >= Game.mapHeight - 1;
+        return lowestY >= Game.mapHeight;
     }
 
     private bool CollidedFromBottom()
@@ -183,18 +202,19 @@ public class Block
         return false;
     }
 
-    private bool CollidedFromSide()
+    private bool Collided()
     {
-        var fallenBlocksMap = Game.currentGame.fallenBlocksMap;
+        var map = Game.currentGame.fallenBlocksMap;
+        var gameBlocks = Game.currentGame.Blocks;
         for (int y = 0; y < Matrice.GetLength(0); y++)
         {
             for (int x = 0; x < Matrice.GetLength(1); x++)
             {
                 var pos = GetMapRelativePosition(x, y);
-                if (pos.y < 0 || !Matrice[y, x])
+                if (pos.y < 0 || !Matrice[y, x] || IsOutOfBorders())
                     continue;
 
-                if (fallenBlocksMap[pos.y, pos.x])
+                if (map[pos.y, pos.x] && Matrice[y, x] && gameBlocks.FirstOrDefault(l => l.ContainsMapRelativePosition(pos.x, pos.y)) != this)
                     return true;
             }
         }
