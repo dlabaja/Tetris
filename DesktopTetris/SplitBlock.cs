@@ -9,7 +9,7 @@ public class SplitBlock : Block
         Matrice = matrice;
         AnchorPosition = new[]{anchor.x, anchor.y};
         Color = color;
-        isDisabled = true;
+        alreadyFallen = true;
         
         DisableInput();
     }

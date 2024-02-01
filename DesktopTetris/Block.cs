@@ -5,10 +5,10 @@ namespace DesktopTetris;
 public class Block
 {
     private readonly List<bool[,]> blockTypes = new List<bool[,]>{
-        /*new[,]{
+        new[,]{
             {false, false, true},
             {true, true, true},
-        },*/
+        },
         new[,]{
             {true, true, true, true}
         },
@@ -16,7 +16,7 @@ public class Block
             {true, true},
             {true, true}
         },
-        /*new[,]{
+        new[,]{
             {false, true, true},
             {true, true, false},
         },
@@ -27,13 +27,13 @@ public class Block
         new[,]{
             {true, false, false},
             {true, true, true},
-        },*/
+        },
     };
 
     public int[] AnchorPosition; // upper left corner
     public Color Color { get; protected set; }
     public bool[,] Matrice { get; protected set; }
-    public bool isDisabled;
+    public bool alreadyFallen;
 
     private readonly List<Color> colors = new List<Color>{
         new Color(3, 65, 174),
@@ -129,9 +129,9 @@ public class Block
         {
             AnchorPosition[1] -= 1;
 
-            if (!isDisabled)
+            if (!alreadyFallen)
             {
-                isDisabled = true;
+                alreadyFallen = true;
                 DisableInput();
                 Game.currentGame.canSpawnNewBlock = true;
             }

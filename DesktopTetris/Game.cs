@@ -190,7 +190,7 @@ public class Game
                 for (int x = 0; x < block.Matrice.GetLength(1); x++)
                     block.Matrice[y, x] = false;
 
-                if (!affectedBlocks.Contains(block))
+                if (!affectedBlocks.Contains(block) && block.alreadyFallen)
                 {
                     affectedBlocks.Add(block);
                 }
@@ -202,6 +202,8 @@ public class Game
             SplitBlocks(block);
         }
     }
+    
+    
 
     private void SplitBlocks(Block block)
     {
