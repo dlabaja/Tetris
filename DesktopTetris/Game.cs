@@ -20,6 +20,7 @@ public class Game
     public const int mapWidth = 10;
     public const int mapHeight = 16;
     public event EventHandler GameEnded;
+    public bool canSpawnNewBlock = false;
 
     private Timer moveDownTimer;
 
@@ -45,20 +46,28 @@ public class Game
 
     private void OnMoveDownTimerOnElapsed(object? o, ElapsedEventArgs elapsedEventArgs)
     {
-        Console.WriteLine($"|{Blocks.Count}");
+        RegenMap();
+        RemoveFilledParts();
+        RegenMap();
+        
         var ghostBlocks = Blocks.ToList();
         Blocks.Clear();
         RegenMap();
 
         foreach (var block in GenerateBottomToTopBlockList(ghostBlocks.ToList()))
         {
-            Blocks.Add(block);
             block.MoveDown();
+            Blocks.Add(block);
             RegenMap();
         }
-
-        Console.WriteLine(ghostBlocks.Count);
+        
         Blocks = ghostBlocks;
+
+        if (canSpawnNewBlock)
+        {
+            canSpawnNewBlock = false;
+            SpawnNewBlock();
+        }
     }
 
     private List<Block> GenerateBottomToTopBlockList(IReadOnlyCollection<Block> blocks)
@@ -105,10 +114,6 @@ public class Game
     {
         Score++;
         WindowManager.mainWindow.ChangeScore(Score);
-        
-        RegenMap();
-        RemoveFilledParts();
-        RegenMap();
 
         if (NoRoomForNewBlock())
         {
@@ -222,7 +227,7 @@ public class Game
                     continue;
                 }
                 
-                var anchor = block.GetMapRelativePosition(0, y);
+                var anchor = emptyRow ? block.GetMapRelativePosition(0, y - 1) : block.GetMapRelativePosition(0, y);
                 Blocks.Add(new SplitBlock(newMatrice,
                     (anchor.x, anchor.y),
                     block.Color));

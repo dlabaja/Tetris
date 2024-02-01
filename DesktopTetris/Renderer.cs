@@ -66,8 +66,13 @@ public static class Renderer
         }
     }
 
-    private static void CalculateRectangles(Block block, ref Rectangle?[,] rectanglesNew)
+    private static void CalculateRectangles(Block? block, ref Rectangle?[,] rectanglesNew)
     {
+        if (block == null)
+        {
+            return;
+        }
+        
         var matrice = block.Matrice;
         var counted = new List<(int, int)>();
 

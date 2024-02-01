@@ -133,7 +133,7 @@ public class Block
             {
                 isDisabled = true;
                 DisableInput();
-                Game.currentGame.SpawnNewBlock();
+                Game.currentGame.canSpawnNewBlock = true;
             }
         }
     }
