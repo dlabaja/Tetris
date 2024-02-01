@@ -30,7 +30,7 @@ public class Block
         },*/
     };
 
-    protected int[] AnchorPosition; // upper left corner
+    public int[] AnchorPosition; // upper left corner
     public Color Color { get; protected set; }
     public bool[,] Matrice { get; protected set; }
     public bool isDisabled;
@@ -51,22 +51,23 @@ public class Block
     public Block()
     {
         Matrice = blockTypes[new Random().Next(blockTypes.Count)];
-        AnchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), -Matrice.GetLength(0)};
+        AnchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), 0}; //-Matrice.GetLength(0)
         Color = colors[new Random().Next(colors.Count)];
 
         HookEvents();
     }
 
-    protected void OnGameEnded(object? sender, EventArgs e)
+    private void OnGameEnded(object? sender, EventArgs e)
     {
         Color = new Color(128, 128, 128);
         
+        DisableInput();
         Game.currentGame.GameEnded -= OnGameEnded;
     }
 
     private void OnRotate(object? sender, EventArgs e) => Rotate();
 
-    protected void OnMoveDown(object? sender, EventArgs e) => MoveDown();
+    private void OnMoveDown(object? sender, EventArgs e) => MoveDown();
 
     private void OnMoveLeft(object? sender, EventArgs e) => Move(-1);
 
@@ -123,7 +124,7 @@ public class Block
     public void MoveDown()
     {
         AnchorPosition[1] += 1;
-
+        
         if (IsAtBottom() || Collided())
         {
             AnchorPosition[1] -= 1;
@@ -135,8 +136,6 @@ public class Block
                 Game.currentGame.SpawnNewBlock();
             }
         }
-
-        Console.WriteLine(isDisabled);
     }
 
     private void Move(int xOffset)

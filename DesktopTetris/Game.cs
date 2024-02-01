@@ -45,18 +45,19 @@ public class Game
 
     private void OnMoveDownTimerOnElapsed(object? o, ElapsedEventArgs elapsedEventArgs)
     {
-        Console.WriteLine(Blocks.Count);
+        Console.WriteLine($"|{Blocks.Count}");
         var ghostBlocks = Blocks.ToList();
         Blocks.Clear();
         RegenMap();
 
         foreach (var block in GenerateBottomToTopBlockList(ghostBlocks.ToList()))
         {
-            block.MoveDown();
             Blocks.Add(block);
+            block.MoveDown();
             RegenMap();
         }
 
+        Console.WriteLine(ghostBlocks.Count);
         Blocks = ghostBlocks;
     }
 
@@ -81,7 +82,7 @@ public class Game
             if (!list.Contains(block))
                 list.Add(block);
         }
-        
+
         return list;
     }
 
@@ -108,8 +109,7 @@ public class Game
         RegenMap();
         RemoveFilledParts();
         RegenMap();
-        
-        
+
         if (NoRoomForNewBlock())
         {
             GameEnded.Invoke(this, EventArgs.Empty);
@@ -117,7 +117,6 @@ public class Game
         }
         
         Blocks.Add(new Block());
-        Console.WriteLine($"bloky {Blocks.Count}");
     }
 
     public void PrintMap()
