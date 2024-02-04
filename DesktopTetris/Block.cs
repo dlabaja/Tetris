@@ -30,7 +30,8 @@ public class Block
         },
     };
 
-    public int[] AnchorPosition; // upper left corner
+    protected int[] AnchorPosition; // upper left corner
+    public string debugMsg = "";
     public Color Color { get; protected set; }
     public bool[,] Matrice { get; protected set; }
     public bool alreadyFallen;
@@ -51,7 +52,7 @@ public class Block
     public Block()
     {
         Matrice = blockTypes[new Random().Next(blockTypes.Count)];
-        AnchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), 0}; //-Matrice.GetLength(0)
+        AnchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), -Matrice.GetLength(0)};
         Color = colors[new Random().Next(colors.Count)];
 
         HookEvents();
@@ -107,32 +108,48 @@ public class Block
 
     private void Rotate()
     {
-        var oldMatrice = Matrice;
-        var newMatrice = new bool[Matrice.GetLength(1), Matrice.GetLength(0)];
+        var originalMatrice = Matrice; // uložení originální matice do paměti
+        var newMatrice = new bool[Matrice.GetLength(1), Matrice.GetLength(0)]; // nová matice s prohozenými dimenzemi
         for (int x = 0; x < Matrice.GetLength(1); x++)
         for (int y = 0; y < Matrice.GetLength(0); y++)
         {
-            newMatrice[x, Matrice.GetLength(0) - 1 - y] = Matrice[y, x];
+            newMatrice[x, Matrice.GetLength(0) - 1 - y] = Matrice[y, x]; // přepsání matice podle vzorečku
         }
 
-        Matrice = newMatrice;
+        Matrice = newMatrice; // nahrazení matice
 
-        if (IsOutOfBorders() || Collided())
-            Matrice = oldMatrice;
+        if (IsOutOfBorders() || Collided()) // pokud je nové otočená matice mimo hru nebo v jiném bloku, vrátí změny
+            Matrice = originalMatrice;
+    }
+
+    public bool CanMoveDown()
+    {
+        AnchorPosition[1] += 1;
+
+        if (IsAtBottom() || Collided())
+        {
+            AnchorPosition[1] -= 1;
+            return false;
+        }
+        
+        AnchorPosition[1] -= 1;
+        return true;
     }
 
     public void MoveDown()
     {
         AnchorPosition[1] += 1;
-        
+
         if (IsAtBottom() || Collided())
         {
             AnchorPosition[1] -= 1;
 
+            // blok již jednou spadnul, ochrana proti
+            // nekonečnému tvoření nových bloků
             if (!alreadyFallen)
             {
                 alreadyFallen = true;
-                DisableInput();
+                DisableInput(); // vypne ovládání bloku
                 Game.currentGame.canSpawnNewBlock = true;
             }
         }
@@ -177,28 +194,6 @@ public class Block
         }
 
         return lowestY >= Game.mapHeight;
-    }
-
-    private bool CollidedFromBottom()
-    {
-        var fallenBlocksMap = Game.currentGame.fallenBlocksMap;
-        for (int y = 0; y < Matrice.GetLength(0); y++)
-        {
-            for (int x = 0; x < Matrice.GetLength(1); x++)
-            {
-                var pos = GetMapRelativePosition(x, y);
-                if (pos.y < 0 || !Matrice[y, x])
-                    continue;
-
-                if (pos.y + 1 >= Game.mapHeight)
-                    return true;
-
-                if (fallenBlocksMap[pos.y + 1, pos.x])
-                    return true;
-            }
-        }
-
-        return false;
     }
 
     private bool Collided()

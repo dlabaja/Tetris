@@ -13,13 +13,13 @@ public static class Renderer
     private static readonly int blockSize;
     private static readonly (int x, int y) anchor;
 
-    private static Rectangle?[,] rectanglesOld = new Rectangle?[16, 10];
+    private static Rectangle?[,] rectanglesOld = new Rectangle?[Game.mapHeight, Game.mapWidth];
 
     static Renderer()
     {
         (int width, int height) desktopSize = (WindowManager.mainWindow.Screen.Width, WindowManager.mainWindow.Screen.Height);
-        blockSize = (int)Math.Round(((double)desktopSize.height - 100) / 16);
-        anchor = ((int)Math.Round(((double)desktopSize.width - 10 * blockSize) / 2), blockSize);
+        blockSize = (int)Math.Round(((double)desktopSize.height - 100) / Game.mapHeight);
+        anchor = ((int)Math.Round(((double)desktopSize.width - Game.mapWidth * blockSize) / 2), blockSize);
 
         var frameTimer = new Timer(framePeriod);
         frameTimer.Elapsed += (_, _) => PrintNewFrame();
@@ -31,12 +31,17 @@ public static class Renderer
 
     private static void PrintNewFrame()
     {
-        var rectanglesNew = new Rectangle?[16, 10];
+        var rectanglesNew = new Rectangle?[Game.mapHeight, Game.mapWidth];
 
-        var blocks = Game.currentGame.Blocks.ToArray();
+        var blocks = Game.currentGame.Blocks.ToList();
+        var fallingBlocks = Game.currentGame.fallingBlocks.ToList();
 
         // create rectangles for all blocks in the game
         foreach (var block in blocks)
+        {
+            CalculateRectangles(block, ref rectanglesNew);
+        }
+        foreach (var block in fallingBlocks)
         {
             CalculateRectangles(block, ref rectanglesNew);
         }
@@ -52,15 +57,15 @@ public static class Renderer
         WindowManager.CleanRemnants();
 
         // render windows left in new list
-        for (int y = 0; y < 16; y++)
+        for (int y = 0; y < Game.mapHeight; y++)
         {
-            for (int x = 0; x < 10; x++)
+            for (int x = 0; x < Game.mapWidth; x++)
             {
                 if (rectanglesNew[y, x] == null)
                     continue;
                 
                 var r = rectanglesNew[y, x]!.Value;
-                WindowManager.GetNewWindow((r.posX, r.posY), (r.sizeX, r.sizeY), r.color);
+                WindowManager.GetNewWindow((r.posX, r.posY), (r.sizeX, r.sizeY), r.color, r.debugText);
                 rectanglesOld[y, x] = r;
             }
         }
@@ -90,6 +95,7 @@ public static class Renderer
                 r.posX = pos.x;
                 r.posY = pos.y;
                 r.color = block.Color;
+                r.debugText = block.debugMsg;
 
                 if (pos.y > 15)
                 {
@@ -135,9 +141,9 @@ public static class Renderer
     // removes duplicates in the new and old list
     private static Rectangle?[,] RemoveDuplicates(Rectangle?[,] rectanglesNew)
     {
-        for (int y = 0; y < 16; y++)
+        for (int y = 0; y < Game.mapHeight; y++)
         {
-            for (int x = 0; x < 10; x++)
+            for (int x = 0; x < Game.mapWidth; x++)
             {
                 if (rectanglesNew[y, x] == null && rectanglesOld[y, x] == null)
                     continue;
@@ -166,6 +172,7 @@ public static class Renderer
 
         public int sizeX = 0;
         public int sizeY = blockSize;
+        public string debugText;
 
         public Color color;
 
