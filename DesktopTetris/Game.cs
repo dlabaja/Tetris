@@ -12,7 +12,7 @@ public class Game
 {
     public static Game currentGame = null!;
     public List<Block> Blocks { get; set; } = new List<Block>();
-    public List<Block> fallingBlocks = new List<Block>();
+    public Block currentBlock;
     private int GameTime { get; set; }
     public int Level { get; private set; } = 1;
     private int Score { get; set; }
@@ -29,7 +29,7 @@ public class Game
     {
         currentGame = this;
         InitTimers();
-        fallingBlocks.Add(new Block());
+        currentBlock = new Block();
 
         GameEnded += OnGameEnded;
     }
@@ -50,30 +50,32 @@ public class Game
         UpdateMap();
         RemoveFilledParts();
         UpdateMap();
-        
-        PrintMap();
 
-        foreach (var block in fallingBlocks.ToList())
+        var countedBlocks = new List<Block>();
+        for (int i = 0; i < Blocks.Count; i++)
         {
-            if (block.CanMoveDown())
+            var allFallen = true;
+            foreach (var block in Blocks.Where(x => !countedBlocks.Contains(x)))
             {
-                block.MoveDown();
-                continue;
+                if (block.MoveDown())
+                {
+                    UpdateMap();
+                    countedBlocks.Add(block);
+                    allFallen = false;
+                }
             }
 
-            block.MoveDown();
-            fallingBlocks.Remove(block);
-            Blocks.Add(block);
-            UpdateMap();
+            if (allFallen)
+                break;
         }
+
+        currentBlock.MoveDown();
 
         if (canSpawnNewBlock)
         {
             canSpawnNewBlock = false;
             SpawnNewBlock();
         }
-        
-        PrintMap();
     }
 
     private void OnGameEnded(object? sender, EventArgs e)
@@ -92,6 +94,7 @@ public class Game
 
     private void SpawnNewBlock()
     {
+        Blocks.Add(currentBlock);
         Score++;
         WindowManager.mainWindow.ChangeScore(Score);
 
@@ -100,8 +103,8 @@ public class Game
             GameEnded.Invoke(this, EventArgs.Empty);
             return;
         }
-
-        fallingBlocks.Add(new Block());
+        
+        currentBlock = new Block();
     }
 
     private void PrintMap()
@@ -182,12 +185,6 @@ public class Game
             {
                 Blocks.Remove(block);
             }*/
-        }
-
-        if (rows.Any())
-        {
-            fallingBlocks = fallingBlocks.Union(Blocks).ToList();
-            Blocks.Clear();
         }
     }
     

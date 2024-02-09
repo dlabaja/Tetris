@@ -136,7 +136,7 @@ public class Block
         return true;
     }
 
-    public void MoveDown()
+    public bool MoveDown()
     {
         AnchorPosition[1] += 1;
 
@@ -152,7 +152,12 @@ public class Block
                 DisableInput(); // vypne ovládání bloku
                 Game.currentGame.canSpawnNewBlock = true;
             }
+
+            return false;
         }
+
+        Game.currentGame.UpdateMap();
+        return true;
     }
 
     private void Move(int xOffset)

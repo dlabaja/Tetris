@@ -34,17 +34,13 @@ public static class Renderer
         var rectanglesNew = new Rectangle?[Game.mapHeight, Game.mapWidth];
 
         var blocks = Game.currentGame.Blocks.ToList();
-        var fallingBlocks = Game.currentGame.fallingBlocks.ToList();
 
         // create rectangles for all blocks in the game
         foreach (var block in blocks)
         {
             CalculateRectangles(block, ref rectanglesNew);
         }
-        foreach (var block in fallingBlocks)
-        {
-            CalculateRectangles(block, ref rectanglesNew);
-        }
+        CalculateRectangles(Game.currentGame.currentBlock, ref rectanglesNew);
 
         rectanglesNew = RemoveDuplicates(rectanglesNew); // passnutím listu se z nějakýho důvodu vytvoří reference
 
