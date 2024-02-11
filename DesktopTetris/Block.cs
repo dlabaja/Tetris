@@ -7,7 +7,7 @@ public class Block
     private readonly List<bool[,]> blockTypes = new List<bool[,]>{
         new[,]{
             {false, false, true},
-            {true, true, true},
+            {true, true, true}
         },
         new[,]{
             {true, true, true, true}
@@ -18,23 +18,23 @@ public class Block
         },
         new[,]{
             {false, true, true},
-            {true, true, false},
+            {true, true, false}
         },
         new[,]{
             {true, true, false},
-            {false, true, true},
+            {false, true, true}
         },
         new[,]{
             {true, false, false},
-            {true, true, true},
-        },
+            {true, true, true}
+        }
     };
 
-    protected int[] AnchorPosition; // upper left corner
-    public string debugMsg = "";
-    public Color Color { get; protected set; }
-    public bool[,] Matrice { get; protected set; }
-    public bool alreadyFallen;
+    private readonly int[] anchorPosition; // upper left corner
+    public Color Color { get; private set; }
+    public bool[,] Matrice { get; private set; }
+    // ReSharper disable once MemberCanBePrivate.Global
+    public bool AlreadyFallen { get; private set; }
 
     private readonly List<Color> colors = new List<Color>{
         new Color(3, 65, 174),
@@ -44,19 +44,28 @@ public class Block
         new Color(255, 50, 19)
     };
 
-    public (int x, int y) GetMapRelativePosition(int x, int y)
-    {
-        return (AnchorPosition[0] + x, AnchorPosition[1] + y);
-    }
-
     public Block()
     {
         Matrice = blockTypes[new Random().Next(blockTypes.Count)];
-        AnchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), -Matrice.GetLength(0)};
+        anchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), -Matrice.GetLength(0)};
         Color = colors[new Random().Next(colors.Count)];
 
         HookEvents();
     }
+
+    public Block(bool[,]? matrice, Color? color, (int x, int y) anchorPosition = default, bool alreadyFallen = false)
+    {
+        Matrice = matrice ?? blockTypes[new Random().Next(blockTypes.Count)];
+        this.anchorPosition = new []{anchorPosition.x, anchorPosition.y};
+        Color = color ?? colors[new Random().Next(colors.Count)];
+        AlreadyFallen = alreadyFallen;
+        if (!alreadyFallen)
+            HookEvents();
+    }
+    
+    public (int x, int y) GetMapRelativePosition(int x, int y) => (anchorPosition[0] + x, anchorPosition[1] + y);
+
+    public (int x, int y) GetAnchorPosition() => (anchorPosition[0], anchorPosition[1]);
 
     private void OnGameEnded(object? sender, EventArgs e)
     {
@@ -66,7 +75,7 @@ public class Block
         Game.currentGame.GameEnded -= OnGameEnded;
     }
 
-    private void OnRotate(object? sender, EventArgs e) => Rotate();
+    private void OnRotate(object? sender, EventArgs e) => RotateRight();
 
     private void OnMoveDown(object? sender, EventArgs e) => MoveDown();
 
@@ -91,7 +100,7 @@ public class Block
         Controls.RotatePress -= OnRotate;
     }
 
-    public bool ContainsMapRelativePosition(int xPos, int yPos)
+    private bool ContainsMapRelativePosition(int xPos, int yPos)
     {
         for (int x = 0; x < Matrice.GetLength(1); x++)
         for (int y = 0; y < Matrice.GetLength(0); y++)
@@ -106,7 +115,7 @@ public class Block
         return false;
     }
 
-    private void Rotate()
+    public void RotateRight()
     {
         var originalMatrice = Matrice; // uložení originální matice do paměti
         var newMatrice = new bool[Matrice.GetLength(1), Matrice.GetLength(0)]; // nová matice s prohozenými dimenzemi
@@ -122,33 +131,19 @@ public class Block
             Matrice = originalMatrice;
     }
 
-    public bool CanMoveDown()
-    {
-        AnchorPosition[1] += 1;
-
-        if (IsAtBottom() || Collided())
-        {
-            AnchorPosition[1] -= 1;
-            return false;
-        }
-        
-        AnchorPosition[1] -= 1;
-        return true;
-    }
-
     public bool MoveDown()
     {
-        AnchorPosition[1] += 1;
+        anchorPosition[1] += 1;
 
         if (IsAtBottom() || Collided())
         {
-            AnchorPosition[1] -= 1;
+            anchorPosition[1] -= 1;
 
             // blok již jednou spadnul, ochrana proti
             // nekonečnému tvoření nových bloků
-            if (!alreadyFallen)
+            if (!AlreadyFallen)
             {
-                alreadyFallen = true;
+                AlreadyFallen = true;
                 DisableInput(); // vypne ovládání bloku
                 Game.currentGame.canSpawnNewBlock = true;
             }
@@ -162,9 +157,9 @@ public class Block
 
     private void Move(int xOffset)
     {
-        AnchorPosition[0] += xOffset;
+        anchorPosition[0] += xOffset;
         if (IsOutOfBorders() || Collided())
-            AnchorPosition[0] -= xOffset;
+            anchorPosition[0] -= xOffset;
     }
 
     private bool IsOutOfBorders()
@@ -175,7 +170,7 @@ public class Block
             if (!Matrice[y, x])
                 continue;
 
-            if (AnchorPosition[0] + x is < 0 or >= Game.mapWidth || AnchorPosition[1] + y >= Game.mapHeight)
+            if (anchorPosition[0] + x is < 0 or >= Game.mapWidth || anchorPosition[1] + y >= Game.mapHeight)
             {
                 return true;
             }

@@ -40,7 +40,6 @@ public static class Renderer
         {
             CalculateRectangles(block, ref rectanglesNew);
         }
-        CalculateRectangles(Game.currentGame.currentBlock, ref rectanglesNew);
 
         rectanglesNew = RemoveDuplicates(rectanglesNew); // passnutím listu se z nějakýho důvodu vytvoří reference
 
@@ -91,7 +90,6 @@ public static class Renderer
                 r.posX = pos.x;
                 r.posY = pos.y;
                 r.color = block.Color;
-                r.debugText = block.debugMsg;
 
                 if (pos.y > 15)
                 {

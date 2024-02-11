@@ -1,6 +1,4 @@
 using DesktopTetris.GtkWindows;
-using Gdk;
-using Gtk;
 using System.Diagnostics;
 using System.Text;
 using System.Timers;
@@ -12,7 +10,6 @@ public class Game
 {
     public static Game currentGame = null!;
     public List<Block> Blocks { get; set; } = new List<Block>();
-    public Block currentBlock;
     private int GameTime { get; set; }
     public int Level { get; private set; } = 1;
     private int Score { get; set; }
@@ -29,7 +26,7 @@ public class Game
     {
         currentGame = this;
         InitTimers();
-        currentBlock = new Block();
+        Blocks.Add(new Block());
 
         GameEnded += OnGameEnded;
     }
@@ -69,8 +66,6 @@ public class Game
                 break;
         }
 
-        currentBlock.MoveDown();
-
         if (canSpawnNewBlock)
         {
             canSpawnNewBlock = false;
@@ -94,7 +89,6 @@ public class Game
 
     private void SpawnNewBlock()
     {
-        Blocks.Add(currentBlock);
         Score++;
         WindowManager.mainWindow.ChangeScore(Score);
 
@@ -104,7 +98,7 @@ public class Game
             return;
         }
         
-        currentBlock = new Block();
+        Blocks.Add(new Block());
     }
 
     private void PrintMap()
@@ -170,8 +164,8 @@ public class Game
                 if (!rows.Contains(block.GetMapRelativePosition(0, y).y))
                     continue;
 
-                /*for (int x = 0; x < block.Matrice.GetLength(1); x++)
-                    block.Matrice[y, x] = false;*/
+                for (int x = 0; x < block.Matrice.GetLength(1); x++)
+                    block.Matrice[y, x] = false;
 
                 if (!affectedBlocks.Contains(block))
                     affectedBlocks.Add(block);
@@ -198,7 +192,7 @@ public class Game
             {
                 if (!IsMatriceEmpty(newMatrice))
                 {
-                    Blocks.Add(new SplitBlock(newMatrice, block.GetMapRelativePosition(0, lowestY), block.Color));   
+                    Blocks.Add(new Block(newMatrice, block.Color, block.GetMapRelativePosition(0, lowestY)));   
                 }
                 lowestY = y + 1;
                 newMatrice = new bool[block.Matrice.GetLength(0), block.Matrice.GetLength(1)];
