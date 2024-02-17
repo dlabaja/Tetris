@@ -2,50 +2,30 @@ using DesktopTetris;
 
 namespace Tests.BlockTest;
 
-public class Tests : BlockTest
+public class RotateBlockTest : BlockTest
 {
-    private readonly List<bool[,]> blockTypes = new List<bool[,]>{
-        new[,]{
-            {false, false, true},
-            {true, true, true}
-        },
-        new[,]{
-            {true, true, true, true}
-        },
-        new[,]{
-            {true, true},
-            {true, true}
-        },
-        new[,]{
-            {false, true, true},
-            {true, true, false}
-        },
-        new[,]{
-            {true, true, false},
-            {false, true, true}
-        },
-        new[,]{
-            {true, false, false},
-            {true, true, true}
-        }
-    };
-    
     [Test]
-    public void TestRotateBlock()
+    public void TestRotateAround()
     {
-        // test all types
-        foreach (var matrice in blockTypes)
+        foreach (var matrice in blockTypes.Values)
         {
-            block = new Block(matrice, null);
-            
-            // rotate around
+            var block = new Block(matrice);
+
             for (int i = 0; i < 4; i++)
             {
                 block.RotateRight();
             }
             Assert.That(block.Matrice, Is.EqualTo(matrice));
-        
-            // check if the block is correctly rotated
+        }
+    }
+
+    [Test]
+    public void TestRotateOnce()
+    {
+        foreach (var matrice in blockTypes.Values)
+        {
+            var block = new Block(matrice);
+
             block.RotateRight();
             for (int x = 0; x < matrice.GetLength(1); x++)
             {
@@ -55,5 +35,22 @@ public class Tests : BlockTest
                 }
             }
         }
+    }
+
+    [Test]
+    public void TestRotateAgainsWall()
+    {
+        var block = AddNewBlock(blockTypes[BlockType.I]);
+        var anchor = (9, 0);
+        block.RotateRight();
+        block.MoveTo(anchor);
+
+        var matrice = block.Matrice;
+        block.RotateRight();
+        Assert.Multiple(() =>
+        {
+            Assert.That(block.Matrice, Is.EqualTo(matrice));
+            Assert.That(block.GetAnchorPosition(), Is.EqualTo(anchor));
+        });
     }
 }

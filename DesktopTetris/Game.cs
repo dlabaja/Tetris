@@ -14,7 +14,7 @@ public class Game
     public int Level { get; private set; } = 1;
     private int Score { get; set; }
 
-    public bool[,] fallenBlocksMap = new bool[mapHeight, mapWidth];
+    public BlocksMap map = new BlocksMap();
     public const int mapWidth = 10;
     public const int mapHeight = 16;
     public event EventHandler GameEnded;
@@ -81,7 +81,7 @@ public class Game
     private bool NoRoomForNewBlock()
     {
         for (int x = 0; x < mapWidth; x++)
-            if (fallenBlocksMap[0, x])
+            if (map.map[0, x].Count >= 2)
                 return true;
 
         return false;
@@ -89,6 +89,8 @@ public class Game
 
     private void SpawnNewBlock()
     {
+        UpdateMap();
+        
         Score++;
         WindowManager.mainWindow.ChangeScore(Score);
 
@@ -97,43 +99,19 @@ public class Game
             GameEnded.Invoke(this, EventArgs.Empty);
             return;
         }
-        
+
         Blocks.Add(new Block());
-    }
-
-    private void PrintMap()
-    {
-        var s = new StringBuilder();
-        s.Append("--------\n");
-        for (int y = 0; y < 16; y++)
-        {
-            for (int x = 0; x < 10; x++)
-            {
-                if (fallenBlocksMap[y, x])
-                {
-                    s.Append("1");
-                    continue;
-                }
-
-                s.Append("0");
-            }
-
-            s.Append("\n");
-        }
-
-        s.Append("--------");
-        Debug.WriteLine(s);
     }
 
     private List<int> GetFilledRowsIndexes()
     {
         var filledRows = new List<int>();
-        for (int y = 0; y < fallenBlocksMap.GetLength(0); y++)
+        for (int y = 0; y < map.map.GetLength(0); y++)
         {
             var filled = true;
-            for (int x = 0; x < fallenBlocksMap.GetLength(1); x++)
+            for (int x = 0; x < map.map.GetLength(1); x++)
             {
-                if (fallenBlocksMap[y, x])
+                if (map.map[y, x].Count < 2)
                     continue;
 
                 filled = false;
@@ -147,6 +125,12 @@ public class Game
         }
 
         return filledRows;
+    }
+
+    public void AddBlock(Block block)
+    {
+        Blocks.Add(block);
+        UpdateMap();
     }
 
     private void RemoveFilledParts()
@@ -192,7 +176,7 @@ public class Game
             {
                 if (!IsMatriceEmpty(newMatrice))
                 {
-                    Blocks.Add(new Block(newMatrice, block.Color, block.GetMapRelativePosition(0, lowestY)));   
+                    AddBlock(new Block(newMatrice, block.GetMapRelativePosition(0, lowestY), true, block.Color));   
                 }
                 lowestY = y + 1;
                 newMatrice = new bool[block.Matrice.GetLength(0), block.Matrice.GetLength(1)];
@@ -218,7 +202,7 @@ public class Game
 
     public void UpdateMap()
     {
-        var _map = new bool[16, 10];
+        var _map = new BlocksMap();
         foreach (var block in Blocks)
         {
             for (int y = 0; y < block.Matrice.GetLength(0); y++)
@@ -231,11 +215,11 @@ public class Game
                         continue;
 
                     if (block.Matrice[y, x])
-                        _map[pos.y, pos.x] = block.Matrice[y, x];
+                        _map.map[pos.y, pos.x].Add(block);
                 }
             }
         }
 
-        fallenBlocksMap = _map;
+        map = _map;
     }
 }

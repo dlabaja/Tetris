@@ -44,20 +44,12 @@ public class Block
         new Color(255, 50, 19)
     };
 
-    public Block()
-    {
-        Matrice = blockTypes[new Random().Next(blockTypes.Count)];
-        anchorPosition = new[]{(int)Math.Round((double)Game.mapWidth / 2), -Matrice.GetLength(0)};
-        Color = colors[new Random().Next(colors.Count)];
-
-        HookEvents();
-    }
-
-    public Block(bool[,]? matrice, Color? color, (int x, int y) anchorPosition = default, bool alreadyFallen = false)
+    public Block(bool[,]? matrice = null, (int x, int y)? anchorPosition = null, bool alreadyFallen = false, Color? color = null)
     {
         Matrice = matrice ?? blockTypes[new Random().Next(blockTypes.Count)];
-        this.anchorPosition = new []{anchorPosition.x, anchorPosition.y};
+        this.anchorPosition = anchorPosition == null ? new[]{5, -Matrice.GetLength(0)} : new[]{anchorPosition.Value.x, anchorPosition.Value.y};
         Color = color ?? colors[new Random().Next(colors.Count)];
+        
         AlreadyFallen = alreadyFallen;
         if (!alreadyFallen)
             HookEvents();
@@ -66,6 +58,12 @@ public class Block
     public (int x, int y) GetMapRelativePosition(int x, int y) => (anchorPosition[0] + x, anchorPosition[1] + y);
 
     public (int x, int y) GetAnchorPosition() => (anchorPosition[0], anchorPosition[1]);
+
+    public void MoveTo((int x, int y) pos)
+    {
+        anchorPosition[0] = pos.x;
+        anchorPosition[1] = pos.y;
+    }
 
     private void OnGameEnded(object? sender, EventArgs e)
     {
@@ -92,27 +90,12 @@ public class Block
         Game.currentGame.GameEnded += OnGameEnded;
     }
 
-    protected void DisableInput()
+    private void DisableInput()
     {
         Controls.DownPress -= OnMoveDown;
         Controls.LeftPress -= OnMoveLeft;
         Controls.RightPress -= OnMoveRight;
         Controls.RotatePress -= OnRotate;
-    }
-
-    private bool ContainsMapRelativePosition(int xPos, int yPos)
-    {
-        for (int x = 0; x < Matrice.GetLength(1); x++)
-        for (int y = 0; y < Matrice.GetLength(0); y++)
-        {
-            var pos = GetMapRelativePosition(x, y);
-            if (pos.x == xPos && pos.y == yPos)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public void RotateRight()
@@ -155,7 +138,7 @@ public class Block
         return true;
     }
 
-    private void Move(int xOffset)
+    public void Move(int xOffset)
     {
         anchorPosition[0] += xOffset;
         if (IsOutOfBorders() || Collided())
@@ -198,17 +181,16 @@ public class Block
 
     private bool Collided()
     {
-        var map = Game.currentGame.fallenBlocksMap;
-        var gameBlocks = Game.currentGame.Blocks;
+        var map = Game.currentGame.map.map;
         for (int y = 0; y < Matrice.GetLength(0); y++)
         {
             for (int x = 0; x < Matrice.GetLength(1); x++)
             {
                 var pos = GetMapRelativePosition(x, y);
-                if (pos.y < 0 || !Matrice[y, x] || IsOutOfBorders())
+                if (!Matrice[y, x] || IsOutOfBorders() || pos.y < 0)
                     continue;
 
-                if (map[pos.y, pos.x] && Matrice[y, x] && gameBlocks.FirstOrDefault(l => l.ContainsMapRelativePosition(pos.x, pos.y)) != this)
+                if (map[pos.y, pos.x].Count >= 2 && Matrice[y, x])
                     return true;
             }
         }
