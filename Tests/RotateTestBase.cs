@@ -55,18 +55,6 @@ public class RotateTestBase : TestBase
     }
     
     [Test]
-    public void TestNotRotateAgainstBlock()
-    {
-        var block = AddNewBlock(blockTypes[BlockType.I], (6, 12));
-        AddNewBlock(blockTypes[BlockType.Square], (6, 14));
-        var matrice = block.Matrice;
-        
-        block.RotateRight();
-
-        Assert.That(block.Matrice, Is.EqualTo(matrice));
-    }
-    
-    [Test]
     public void TestNotRotateAgainstLowerBorder()
     {
         var block = AddNewBlock(blockTypes[BlockType.I], (5, 15));

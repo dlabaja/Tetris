@@ -2,7 +2,7 @@ namespace DesktopTetris.GtkWindows;
 
 public class BlocksMap
 {
-    public List<Block>[,] map = new List<Block>[Game.mapHeight, Game.mapWidth];
+    public readonly List<Block>[,] map = new List<Block>[Game.mapHeight, Game.mapWidth];
 
     public BlocksMap()
     {
@@ -19,7 +19,7 @@ public class BlocksMap
                 map[y, x].Remove(block);
     }
 
-    private static bool InRange((int x, int y) pos) => pos.x is >= 0 and < Game.mapWidth && pos.y is >= 0 and < Game.mapHeight;
+    
 
     public void AddBlock(Block block)
     {
@@ -27,7 +27,7 @@ public class BlocksMap
         for (int x = 0; x < block.Matrice.GetLength(1); x++)
         {
             var pos = block.GetMapRelativePosition(x, y);
-            if (block.Matrice[y, x] && InRange((pos.x, pos.y)))
+            if (block.Matrice[y, x] && Utils.InMapRange((pos.x, pos.y)))
                 map[pos.y, pos.x].Add(block);
         }
     }

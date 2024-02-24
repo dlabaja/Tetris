@@ -30,9 +30,15 @@ public class Block
         }
     };
 
-    private readonly int[] anchorPosition; // upper left corner
-    public Color Color { get; private set; }
-    public bool[,] Matrice { get; private set; }
+    public bool[,] Matrice => (bool[,])matrice.Clone();
+    public (int x, int y) Anchor
+    {
+        get => (anchor[0], anchor[1]);
+    }
+    public Color Color { get; }
+
+    private bool[,] matrice;
+    private readonly int[] anchor; // upper left corner
 
     private readonly List<Color> colors = new List<Color>{
         new Color(3, 65, 174),
@@ -42,21 +48,21 @@ public class Block
         new Color(255, 50, 19)
     };
 
-    public Block(bool[,]? matrice = null, (int x, int y)? anchorPosition = null, Color? color = null)
+    public Block(bool[,]? matrice = null, (int x, int y)? anchor = null, Color? color = null)
     {
-        Matrice = matrice ?? blockTypes[new Random().Next(blockTypes.Count)];
-        this.anchorPosition = anchorPosition == null ? new[]{5, -Matrice.GetLength(0)} : new[]{anchorPosition.Value.x, anchorPosition.Value.y};
+        this.matrice = matrice ?? blockTypes[new Random().Next(blockTypes.Count)];
+        this.anchor = anchor == null ? new[]{5, -this.matrice.GetLength(0)} : new[]{anchor.Value.x, anchor.Value.y};
         Color = color ?? colors[new Random().Next(colors.Count)];
     }
-    
-    public (int x, int y) GetMapRelativePosition(int x, int y) => (anchorPosition[0] + x, anchorPosition[1] + y);
 
-    public (int x, int y) GetAnchorPosition() => (anchorPosition[0], anchorPosition[1]);
+    public (int x, int y) GetMapRelativePosition(int x, int y) => (anchor[0] + x, anchor[1] + y);
+
+    public (int x, int y) GetAnchorPosition() => (anchor[0], anchor[1]);
 
     public void MoveTo((int x, int y) pos)
     {
-        anchorPosition[0] = pos.x;
-        anchorPosition[1] = pos.y;
+        anchor[0] = pos.x;
+        anchor[1] = pos.y;
     }
 
     private void OnRotate(object? sender, EventArgs e) => RotateRight();
@@ -80,6 +86,35 @@ public class Block
             newMatrice[x, Matrice.GetLength(0) - 1 - y] = Matrice[y, x]; // přepsání matice podle vzorečku
         }
 
-        Matrice = newMatrice; // nahrazení matice
+        var _matrice = matrice;
+        matrice = newMatrice; // nahrazení matice
+
+        if (CollidesWithSideBorder() || CollidesWithBottomBorder())
+        {
+            matrice = _matrice;
+        }
+    }
+
+    private bool CollidesWithSideBorder()
+    {
+        for (int y = 0; y < matrice.GetLength(0); y++)
+        for (int x = 0; x < matrice.GetLength(1); x++)
+        {
+            var pos = GetMapRelativePosition(x, y);
+            if (!Utils.InMapXRange(pos))
+                return true;
+        }
+
+        return false;
+    }
+    
+    private bool CollidesWithBottomBorder()
+    {
+        for (int y = 0; y < matrice.GetLength(0); y++)
+        for (int x = 0; x < matrice.GetLength(1); x++)
+            if (GetMapRelativePosition(x, y).y >= Game.mapHeight)
+                return true;
+
+        return false;
     }
 }
