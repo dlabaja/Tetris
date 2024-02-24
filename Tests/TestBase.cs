@@ -1,12 +1,13 @@
 using DesktopTetris;
 using Gdk;
 
-namespace Tests.BlockTest;
+namespace Tests;
 
-public class BlockTest
+public class TestBase
 {
     protected Game game;
-    public enum BlockType
+
+    protected enum BlockType
     {
         L,
         I,
@@ -15,7 +16,8 @@ public class BlockTest
         Z,
         J
     }
-    public static Dictionary<BlockType, bool[,]> blockTypes = new Dictionary<BlockType, bool[,]>
+
+    protected static readonly Dictionary<BlockType, bool[,]> blockTypes = new Dictionary<BlockType, bool[,]>
     {
         { BlockType.L, new[,]
             {
@@ -60,7 +62,7 @@ public class BlockTest
         game = new Game();
     }
 
-    public Block AddNewBlock(bool[,]? matrice = null, (int x, int y)? anchorPosition = null, bool alreadyFallen = false, Color? color = null)
+    protected Block AddNewBlock(bool[,]? matrice = null, (int x, int y)? anchorPosition = null, bool alreadyFallen = false, Color? color = null)
     {
         var block = new Block(matrice, anchorPosition, alreadyFallen, color);
         game.AddBlock(block);

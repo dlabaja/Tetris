@@ -33,7 +33,7 @@ public static class Renderer
     {
         var rectanglesNew = new Rectangle?[Game.mapHeight, Game.mapWidth];
 
-        var blocks = Game.currentGame.Blocks.ToList();
+        var blocks = Game.currentGame.Blocks;
 
         // create rectangles for all blocks in the game
         foreach (var block in blocks)

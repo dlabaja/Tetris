@@ -1,6 +1,4 @@
 using DesktopTetris.GtkWindows;
-using System.Diagnostics;
-using System.Text;
 using System.Timers;
 using Timer = System.Timers.Timer;
 
@@ -8,218 +6,24 @@ namespace DesktopTetris;
 
 public class Game
 {
-    public static Game currentGame = null!;
-    public List<Block> Blocks { get; set; } = new List<Block>();
-    private int GameTime { get; set; }
-    public int Level { get; private set; } = 1;
-    private int Score { get; set; }
-
-    public BlocksMap map = new BlocksMap();
-    public const int mapWidth = 10;
     public const int mapHeight = 16;
-    public event EventHandler GameEnded;
-    public bool canSpawnNewBlock;
+    public const int mapWidth = 10;
 
-    private Timer moveDownTimer;
+    public static Game currentGame = null!;
+    
+    public Block[,] Map => (Block[,])map.Clone();
+    public IEnumerable<Block> Blocks => blocks.AsEnumerable();
 
-    public Game()
-    {
-        currentGame = this;
-        InitTimers();
-        Blocks.Add(new Block());
-
-        GameEnded += OnGameEnded;
-    }
-
-    private void InitTimers()
-    {
-        var gameTimer = new Timer(1000);
-        gameTimer.Elapsed += (_, _) => GameTime++;
-        gameTimer.Start();
-
-        moveDownTimer = new Timer(400);
-        moveDownTimer.Elapsed += OnMoveDownTimerElapsed;
-        moveDownTimer.Start();
-    }
-
-    private void OnMoveDownTimerElapsed(object? o, ElapsedEventArgs elapsedEventArgs)
-    {
-        UpdateMap();
-        RemoveFilledParts();
-        UpdateMap();
-
-        var countedBlocks = new List<Block>();
-        for (int i = 0; i < Blocks.Count; i++)
-        {
-            var allFallen = true;
-            foreach (var block in Blocks.Where(x => !countedBlocks.Contains(x)))
-            {
-                if (block.MoveDown())
-                {
-                    UpdateMap();
-                    countedBlocks.Add(block);
-                    allFallen = false;
-                }
-            }
-
-            if (allFallen)
-                break;
-        }
-
-        if (canSpawnNewBlock)
-        {
-            canSpawnNewBlock = false;
-            SpawnNewBlock();
-        }
-    }
-
-    private void OnGameEnded(object? sender, EventArgs e)
-    {
-        moveDownTimer.Stop();
-    }
-
-    private bool NoRoomForNewBlock()
-    {
-        for (int x = 0; x < mapWidth; x++)
-            if (map.map[0, x].Count >= 2)
-                return true;
-
-        return false;
-    }
-
-    private void SpawnNewBlock()
-    {
-        UpdateMap();
-        
-        Score++;
-        WindowManager.mainWindow.ChangeScore(Score);
-
-        if (NoRoomForNewBlock())
-        {
-            GameEnded.Invoke(this, EventArgs.Empty);
-            return;
-        }
-
-        Blocks.Add(new Block());
-    }
-
-    private List<int> GetFilledRowsIndexes()
-    {
-        var filledRows = new List<int>();
-        for (int y = 0; y < map.map.GetLength(0); y++)
-        {
-            var filled = true;
-            for (int x = 0; x < map.map.GetLength(1); x++)
-            {
-                if (map.map[y, x].Count < 2)
-                    continue;
-
-                filled = false;
-                break;
-            }
-
-            if (filled)
-            {
-                filledRows.Add(y);
-            }
-        }
-
-        return filledRows;
-    }
+    private readonly List<Block> blocks = new List<Block>();
+    private readonly Block[,] map = new Block[mapHeight, mapWidth];
 
     public void AddBlock(Block block)
     {
-        Blocks.Add(block);
-        UpdateMap();
+        blocks.Add(block);
     }
 
-    private void RemoveFilledParts()
+    private void UpdateMap()
     {
-        var affectedBlocks = new List<Block>();
-        var rows = GetFilledRowsIndexes();
-        
-        if (!rows.Any())
-            return;
-
-        foreach (var block in Blocks)
-        {
-            for (int y = 0; y < block.Matrice.GetLength(0); y++)
-            {
-                if (!rows.Contains(block.GetMapRelativePosition(0, y).y))
-                    continue;
-
-                for (int x = 0; x < block.Matrice.GetLength(1); x++)
-                    block.Matrice[y, x] = false;
-
-                if (!affectedBlocks.Contains(block))
-                    affectedBlocks.Add(block);
-            }
-        }
-
-        foreach (var block in affectedBlocks)
-        {
-            SplitBlocks(block, rows);
-            /*if (IsMatriceEmpty(block.Matrice))
-            {
-                Blocks.Remove(block);
-            }*/
-        }
-    }
-    
-    private void SplitBlocks(Block block, ICollection<int> rows)
-    {
-        var newMatrice = new bool[block.Matrice.GetLength(0), block.Matrice.GetLength(1)];
-        var lowestY = 0;
-        for (int y = 0; y < block.Matrice.GetLength(0); y++)
-        {
-            if (rows.Contains(block.GetMapRelativePosition(0, y).y) || y == block.Matrice.GetLength(0) - 1)
-            {
-                if (!IsMatriceEmpty(newMatrice))
-                {
-                    AddBlock(new Block(newMatrice, block.GetMapRelativePosition(0, lowestY), true, block.Color));   
-                }
-                lowestY = y + 1;
-                newMatrice = new bool[block.Matrice.GetLength(0), block.Matrice.GetLength(1)];
-                continue;
-            }
-
-            for (int x = 0; x < block.Matrice.GetLength(1); x++)
-                if (block.Matrice[y, x])
-                    newMatrice[y, x] = true;
-        }
-
-        Blocks.Remove(block);
-    }
-
-    private static bool IsMatriceEmpty(bool[,] matrice)
-    {
-        for (int x = 0; x < matrice.GetLength(1); x++)
-        for (int y = 0; y < matrice.GetLength(0); y++)
-            if (matrice[y, x])
-                return false;
-        return true;
-    }
-
-    public void UpdateMap()
-    {
-        var _map = new BlocksMap();
-        foreach (var block in Blocks)
-        {
-            for (int y = 0; y < block.Matrice.GetLength(0); y++)
-            {
-                for (int x = 0; x < block.Matrice.GetLength(1); x++)
-                {
-                    var pos = block.GetMapRelativePosition(x, y);
-
-                    if (pos.x is < 0 or >= 10 || pos.y is < 0 or >= 16)
-                        continue;
-
-                    if (block.Matrice[y, x])
-                        _map.map[pos.y, pos.x].Add(block);
-                }
-            }
-        }
-
-        map = _map;
+        var _map = Map;
     }
 }

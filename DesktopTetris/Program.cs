@@ -13,6 +13,7 @@ public static class Program
         {
             RuntimeHelpers.RunClassConstructor(typeof(Renderer).TypeHandle);
             RuntimeHelpers.RunClassConstructor(typeof(WindowManager).TypeHandle);
+            
             var g = new Game();
             Thread.Sleep(-1);
         }).Start();

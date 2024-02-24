@@ -1,8 +1,8 @@
 using DesktopTetris;
 
-namespace Tests.BlockTest;
+namespace Tests;
 
-public class RotateBlockTest : BlockTest
+public class RotateTestBase : TestBase
 {
     [Test]
     public void TestRotateAround()
@@ -38,7 +38,7 @@ public class RotateBlockTest : BlockTest
     }
 
     [Test]
-    public void TestRotateAgainsWall()
+    public void TestNotRotateAgainstWall()
     {
         var block = AddNewBlock(blockTypes[BlockType.I]);
         var anchor = (9, 0);
@@ -52,5 +52,38 @@ public class RotateBlockTest : BlockTest
             Assert.That(block.Matrice, Is.EqualTo(matrice));
             Assert.That(block.GetAnchorPosition(), Is.EqualTo(anchor));
         });
+    }
+    
+    [Test]
+    public void TestNotRotateAgainstBlock()
+    {
+        var block = AddNewBlock(blockTypes[BlockType.I], (6, 12));
+        AddNewBlock(blockTypes[BlockType.Square], (6, 14));
+        var matrice = block.Matrice;
+        
+        block.RotateRight();
+
+        Assert.That(block.Matrice, Is.EqualTo(matrice));
+    }
+    
+    [Test]
+    public void TestNotRotateAgainstLowerBorder()
+    {
+        var block = AddNewBlock(blockTypes[BlockType.I], (5, 15));
+        var matrice = block.Matrice;
+        
+        block.RotateRight();
+
+        Assert.That(block.Matrice, Is.EqualTo(matrice));
+    }
+    
+    [Test]
+    public void TestRotateAboveMap()
+    {
+        var block = AddNewBlock(blockTypes[BlockType.I], (5, -5));
+
+        block.RotateRight();
+
+        Assert.That(block.Matrice.GetLength(0), Is.EqualTo(4));
     }
 }
