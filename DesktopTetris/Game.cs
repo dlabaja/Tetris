@@ -9,21 +9,23 @@ public class Game
     public const int mapHeight = 16;
     public const int mapWidth = 10;
 
-    public static Game currentGame = null!;
+    public static readonly Game currentGame = null!;
     
-    public Block[,] Map => (Block[,])map.Clone();
+    public List<Block>[,] Map => (List<Block>[,])map.map.Clone();
     public IEnumerable<Block> Blocks => blocks.AsEnumerable();
 
     private readonly List<Block> blocks = new List<Block>();
-    private readonly Block[,] map = new Block[mapHeight, mapWidth];
+    private readonly BlocksMap map = new BlocksMap();
 
     public void AddBlock(Block block)
     {
         blocks.Add(block);
+        map.AddBlock(block);
     }
 
-    private void UpdateMap()
+    public void RemoveBlock(Block block)
     {
-        var _map = Map;
+        blocks.Remove(block);
+        map.RemoveBlock(block);
     }
 }

@@ -62,9 +62,9 @@ public class TestBase
         game = new Game();
     }
 
-    protected Block AddNewBlock(bool[,]? matrice = null, (int x, int y)? anchorPosition = null, bool alreadyFallen = false, Color? color = null)
+    protected Block AddNewBlock(bool[,]? matrice = null, (int x, int y)? anchorPosition = null, Color? color = null)
     {
-        var block = new Block(matrice, anchorPosition, alreadyFallen, color);
+        var block = new Block(matrice, anchorPosition, color);
         game.AddBlock(block);
         return block;
     }
