@@ -17,41 +17,35 @@ public class TestBase
         J
     }
 
-    protected static readonly Dictionary<BlockType, bool[,]> blockTypes = new Dictionary<BlockType, bool[,]>
-    {
-        { BlockType.L, new[,]
-            {
-                { false, false, true },
-                { true, true, true }
+    protected static readonly Dictionary<BlockType, bool[,]> blockTypes = new Dictionary<BlockType, bool[,]>{
+        {
+            BlockType.L, new[,]{
+                {false, false, true},
+                {true, true, true}
             }
-        },
-        { BlockType.I, new[,]
-            {
-                { true, true, true, true }
+        },{
+            BlockType.I, new[,]{
+                {true, true, true, true}
             }
-        },
-        { BlockType.Square, new[,]
-            {
-                { true, true },
-                { true, true }
+        },{
+            BlockType.Square, new[,]{
+                {true, true},
+                {true, true}
             }
-        },
-        { BlockType.S, new[,]
-            {
-                { false, true, true },
-                { true, true, false }
+        },{
+            BlockType.S, new[,]{
+                {false, true, true},
+                {true, true, false}
             }
-        },
-        { BlockType.Z, new[,]
-            {
-                { true, true, false },
-                { false, true, true }
+        },{
+            BlockType.Z, new[,]{
+                {true, true, false},
+                {false, true, true}
             }
-        },
-        { BlockType.J, new[,]
-            {
-                { true, false, false },
-                { true, true, true }
+        },{
+            BlockType.J, new[,]{
+                {true, false, false},
+                {true, true, true}
             }
         }
     };
@@ -62,9 +56,9 @@ public class TestBase
         game = new Game();
     }
 
-    protected Block AddNewBlock(bool[,]? matrice = null, (int x, int y)? anchorPosition = null, Color? color = null)
+    protected Block AddNewBlock(bool[,]? matrice = null, (int x, int y)? anchorPosition = null, bool canSpawnNewBlock = true, Color? color = null)
     {
-        var block = new Block(matrice, anchorPosition, color);
+        var block = new Block(matrice, anchorPosition, canSpawnNewBlock, color);
         game.AddBlock(block);
         return block;
     }

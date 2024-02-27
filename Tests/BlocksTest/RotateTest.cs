@@ -1,8 +1,8 @@
 using DesktopTetris;
 
-namespace Tests;
+namespace Tests.BlocksTest;
 
-public class RotateTestBase : TestBase
+public class RotateTest : TestBase
 {
     [Test]
     public void TestRotateAround()
@@ -60,6 +60,19 @@ public class RotateTestBase : TestBase
         var block = AddNewBlock(blockTypes[BlockType.I], (5, 15));
         var matrice = block.Matrice;
         
+        block.RotateRight();
+
+        Assert.That(block.Matrice, Is.EqualTo(matrice));
+    }
+    
+    [Test]
+    public void TestNotRotateAgainstBlock()
+    {
+        var block = AddNewBlock(blockTypes[BlockType.I], (0, 0));
+        block.RotateRight();
+        var matrice = block.Matrice;
+
+        AddNewBlock(blockTypes[BlockType.Square], (1, 0));
         block.RotateRight();
 
         Assert.That(block.Matrice, Is.EqualTo(matrice));

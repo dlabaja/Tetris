@@ -1,6 +1,4 @@
-using DesktopTetris;
-
-namespace Tests;
+namespace Tests.GameTest;
 
 public class GameTest : TestBase
 {

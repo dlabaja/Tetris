@@ -1,7 +1,7 @@
 using DesktopTetris;
 using DesktopTetris.GtkWindows;
 
-namespace Tests;
+namespace Tests.GameTest;
 
 public class MapTest : TestBase
 {

@@ -1,4 +1,4 @@
-namespace DesktopTetris.GtkWindows;
+namespace DesktopTetris;
 
 public class BlocksMap
 {
@@ -10,7 +10,18 @@ public class BlocksMap
         for (int x = 0; x < map.GetLength(1); x++)
             map[y, x] = new List<Block>();
     }
-    
+
+    public void UpdateMap(Block block)
+    {
+        RemoveBlock(block);
+        AddBlock(block);
+    }
+
+    public bool CollisionDetected()
+    {
+        return ToList().Any(x => x.Count >= 2);
+    }
+
     public void RemoveBlock(Block block)
     {
         for (int y = 0; y < map.GetLength(0); y++)
@@ -19,7 +30,7 @@ public class BlocksMap
                 map[y, x].Remove(block);
     }
 
-    
+
 
     public void AddBlock(Block block)
     {
@@ -31,7 +42,7 @@ public class BlocksMap
                 map[pos.y, pos.x].Add(block);
         }
     }
-    
+
     public IEnumerable<List<Block>> ToList()
     {
         var flattenedList = new List<List<Block>>();

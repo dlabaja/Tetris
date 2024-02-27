@@ -39,6 +39,8 @@ public class Block
 
     private bool[,] matrice;
     private readonly int[] anchor; // upper left corner
+    private bool canSpawnNewBlock;
+    private Game game;
 
     private readonly List<Color> colors = new List<Color>{
         new Color(3, 65, 174),
@@ -48,10 +50,12 @@ public class Block
         new Color(255, 50, 19)
     };
 
-    public Block(bool[,]? matrice = null, (int x, int y)? anchor = null, Color? color = null)
+    public Block(bool[,]? matrice = null, (int x, int y)? anchor = null, bool canSpawnNewBlock = true, Color? color = null)
     {
+        game = Game.currentGame;
         this.matrice = matrice ?? blockTypes[new Random().Next(blockTypes.Count)];
         this.anchor = anchor == null ? new[]{5, -this.matrice.GetLength(0)} : new[]{anchor.Value.x, anchor.Value.y};
+        this.canSpawnNewBlock = canSpawnNewBlock;
         Color = color ?? colors[new Random().Next(colors.Count)];
     }
 
@@ -89,7 +93,7 @@ public class Block
         var _matrice = matrice;
         matrice = newMatrice; // nahrazení matice
 
-        if (CollidesWithSideBorder() || CollidesWithBottomBorder())
+        if (CollidesWithSideBorder() || CollidesWithBottomBorder() || game.CollisionDetected())
         {
             matrice = _matrice;
         }
@@ -116,5 +120,48 @@ public class Block
                 return true;
 
         return false;
+    }
+
+    public void MoveDown()
+    {
+        anchor[1]++;
+        game.UpdateMap(this);
+
+        if (CollidesWithBottomBorder() || game.CollisionDetected())
+        {
+            anchor[1]--;
+
+            if (anchor[1] == Game.mapHeight - 1 && canSpawnNewBlock)
+            {
+                game.AddBlock(new Block());
+                canSpawnNewBlock = false;
+            }
+        }
+        
+        game.UpdateMap(this);
+    }
+
+    public void MoveSideways(int xOffset)
+    {
+        anchor[0] += xOffset;
+        game.UpdateMap(this);
+
+        if (CollidesWithSideBorder() || game.CollisionDetected())
+        {
+            anchor[0] -= xOffset;
+        }
+
+        game.UpdateMap(this);
+    }
+    
+    public IEnumerable<bool> MatriceToList()
+    {
+        var flattenedList = new List<bool>();
+
+        for (int y = 0; y < Matrice.GetLength(0); y++)
+        for (int x = 0; x < Matrice.GetLength(1); x++)
+            flattenedList.Add(Matrice[y, x]);
+
+        return flattenedList;
     }
 }
