@@ -20,6 +20,17 @@ public class Game
 
     private readonly Timer nextTurnTimer;
     private List<int> latestRemovedRows = new List<int>();
+    private bool canSplitBlocks;
+    public event EventHandler GameEndedEvent;
+    public event EventHandler ScoreChanged;
+    
+    public int Score;
+    private readonly Dictionary<int, int> rowsAndScores = new Dictionary<int, int>{
+        {1, 40},
+        {2, 100},
+        {3, 300},
+        {4, 400}
+    };
 
     public Game()
     {
@@ -28,8 +39,20 @@ public class Game
         nextTurnTimer = new Timer(400);
         nextTurnTimer.AutoReset = true;
         nextTurnTimer.Elapsed += OnNextTurn;
-        // todo zapnout po debugingu
         nextTurnTimer.Start();
+        
+        GameEndedEvent += OnGameEnded;
+    }
+
+    public void EndGame()
+    {
+        GameEndedEvent?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnGameEnded(object? sender, EventArgs e)
+    {
+        nextTurnTimer.Elapsed -= OnNextTurn;
+        nextTurnTimer.Stop();
     }
 
     private void OnNextTurn(object? sender, ElapsedEventArgs e) => NextTurn();
@@ -39,7 +62,7 @@ public class Game
         if (latestRemovedRows.Any())
         {
             ShiftAllBlocksDown(latestRemovedRows.Max());
-            latestRemovedRows.Clear();
+            latestRemovedRows.Remove(latestRemovedRows.Max());
         }
 
         var _blocks = blocks.ToList();
@@ -55,11 +78,34 @@ public class Game
                 break;
         }
 
+        if (!canSplitBlocks)
+            return;
+
+        if (map.GetFilledRowsIndexes().Any())
+            AddScore(map.GetFilledRowsIndexes().Count);
+        
         foreach (var row in map.GetFilledRowsIndexes())
         {
             SplitBlocks(row);
             latestRemovedRows.Add(row);
         }
+
+        canSplitBlocks = false;
+    }
+    
+    public bool GameEnded()
+    {
+        for (int x = 0; x < Map.GetLength(1); x++)
+            if (Map[0, x].Count > 1)
+                return true;
+
+        return false;
+    }
+    
+    private void AddScore(int rowCount)
+    {
+        Score += rowsAndScores[rowCount];
+        ScoreChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void ShiftAllBlocksDown(int row)
@@ -86,6 +132,7 @@ public class Game
     private void OnBlockHitLowerBorder(object? sender, EventArgs e)
     {
         AddBlock(new Block());
+        canSplitBlocks = true;
     }
 
     private IEnumerable<Block> GetBlocksForSplitting(int row)

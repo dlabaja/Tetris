@@ -7,16 +7,13 @@ namespace DesktopTetris.GtkWindows;
 public class MainWindow : Window
 {
     private readonly Label scoreLabel;
-    private readonly Label levelLabel;
-
-    public void ChangeScore(int score) => scoreLabel.Text = $"Score: {score}";
-    public void ChangeLevel(int level) => levelLabel.Text = $"Level: {level}";
 
     public MainWindow() : base(WindowType.Toplevel)
     {
         KeyPressEvent += KeyPress;
         DeleteEvent += OnDeleteEventHandler;
         FocusOutEvent += OnFocusOutEventHandler;
+        Game.currentGame.ScoreChanged += OnScoreChanged;
 
         ActivateFocus();
 
@@ -27,12 +24,15 @@ public class MainWindow : Window
         GrabFocus();
         
         scoreLabel = new Label("Score: 0");
-        levelLabel = new Label("Level: 1");
         
         Add(scoreLabel);
-        //Add(levelLabel);
 
         ShowAll();
+    }
+
+    private void OnScoreChanged(object? sender, EventArgs eventArgs)
+    {
+        scoreLabel.Text = $"Score: {Game.currentGame.Score}";
     }
 
     private void OnFocusOutEventHandler(object o, FocusOutEventArgs focusOutEventArgs)
@@ -42,9 +42,10 @@ public class MainWindow : Window
 
     private void OnDeleteEventHandler(object o, DeleteEventArgs deleteEventArgs)
     {
+        KeyPressEvent -= KeyPress;
+        Game.currentGame.ScoreChanged -= OnScoreChanged;
         Application.Quit();
         Environment.Exit(0);
-        KeyPressEvent -= KeyPress;
     }
 
     [GLib.ConnectBefore]

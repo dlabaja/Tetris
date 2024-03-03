@@ -1,6 +1,5 @@
 using Gdk;
 using Gtk;
-using System.Diagnostics;
 using Window = Gtk.Window;
 
 namespace DesktopTetris.GtkWindows;

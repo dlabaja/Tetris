@@ -18,6 +18,7 @@ public class CompleteLineTest : TestBase
         {
             Assert.That(game.Blocks.Count, Is.EqualTo(1));
             Assert.That(Utils.BlockMapToList(game.Map).Count(x => x.Count != 0), Is.EqualTo(0));
+            Assert.That(game.Score, Is.EqualTo(100));
         });
     }
     
@@ -42,6 +43,7 @@ public class CompleteLineTest : TestBase
         {
             Assert.That(game.Blocks.Count, Is.EqualTo(3));
             Assert.That(Utils.BlockMapToList(game.Map).Count(x => x.Count != 0), Is.EqualTo(4));
+            Assert.That(game.Score, Is.EqualTo(100));
         });
     }
 
@@ -61,10 +63,11 @@ public class CompleteLineTest : TestBase
 
         game.NextTurn();
         Assert.That(game.Blocks.Count(x => x.MatriceToList().Count(x => x) == 2), Is.EqualTo(5));
+        Assert.That(game.Score, Is.EqualTo(40));
     }
 
     [Test]
-    public void TestCompleteLineBlockCollidesWithBlockAndBottom()
+    public void TestCantCompleteLineBlockCollidesWithBlockAndBottom()
     {
         var block = AddNewBlock(blockTypes[BlockType.S], (0, 14));
         AddNewBlock(blockTypes[BlockType.S], (2, 14), false);

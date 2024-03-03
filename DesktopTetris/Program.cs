@@ -11,11 +11,11 @@ public static class Program
         Application.Init();
         new Thread(o =>
         {
-            RuntimeHelpers.RunClassConstructor(typeof(Renderer).TypeHandle);
-            RuntimeHelpers.RunClassConstructor(typeof(WindowManager).TypeHandle);
-            
             var g = new Game();
             g.AddBlock(new Block());
+            
+            RuntimeHelpers.RunClassConstructor(typeof(Renderer).TypeHandle);
+            RuntimeHelpers.RunClassConstructor(typeof(WindowManager).TypeHandle);
             Thread.Sleep(-1);
         }).Start();
 

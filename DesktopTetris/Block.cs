@@ -36,13 +36,13 @@ public class Block
     {
         get => (anchor[0], anchor[1]);
     }
-    public Color Color { get; }
+    public Color Color { get; set; }
 
     private bool[,] matrice;
     private readonly int[] anchor; // upper left corner
-    public bool canSpawnNewBlock;
-    private Game game;
-    
+    private bool canSpawnNewBlock;
+    private readonly Game game;
+
     public event EventHandler BlockHitLowerBorder;
 
     private readonly List<Color> colors = new List<Color>{
@@ -62,7 +62,16 @@ public class Block
         Color = color ?? colors[new Random().Next(colors.Count)];
 
         if (this.canSpawnNewBlock)
-            HookEvents();
+            EnableInput();
+
+        game.GameEndedEvent += OnGameEnded;
+    }
+
+    private void OnGameEnded(object? sender, EventArgs e)
+    {
+        Color = new Color(169, 169, 169);
+        canSpawnNewBlock = false;
+        DisableInput();
     }
 
     public (int x, int y) GetMapRelativePosition(int x, int y) => (anchor[0] + x, anchor[1] + y);
@@ -73,13 +82,13 @@ public class Block
     {
         anchor[0] = pos.x;
         anchor[1] = pos.y;
-        
+
         game.UpdateMap(this);
     }
 
     private void OnRotate(object? sender, EventArgs e) => RotateRight();
 
-    private void HookEvents()
+    private void EnableInput()
     {
         Controls.RotatePress += OnRotate;
         Controls.DownPress += OnDownPress;
@@ -119,7 +128,7 @@ public class Block
             matrice = _matrice;
             return;
         }
-        
+
         game.UpdateMap(this);
     }
 
@@ -135,7 +144,7 @@ public class Block
 
         return false;
     }
-    
+
     private bool CollidesWithBottomBorder()
     {
         for (int y = 0; y < matrice.GetLength(0); y++)
@@ -157,16 +166,19 @@ public class Block
             {
                 anchor[1]--;
                 game.UpdateMap(this);
-                
+
                 canSpawnNewBlock = false;
                 BlockHitLowerBorder(this, EventArgs.Empty);
                 DisableInput();
                 return;
             }
+
+            if (game.GameEnded())
+                game.EndGame();
             
             anchor[1]--;
         }
-        
+
         game.UpdateMap(this);
     }
 
@@ -182,7 +194,7 @@ public class Block
 
         game.UpdateMap(this);
     }
-    
+
     public IEnumerable<bool> MatriceToList()
     {
         var flattenedList = new List<bool>();
