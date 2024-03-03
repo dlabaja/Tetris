@@ -17,6 +17,20 @@ public class SpawnBlockTest : TestBase
         
         Assert.That(game.Blocks.Count(), Is.EqualTo(2));
     }
+    
+    [Test]
+    public void TestSpawnBlockAfterCollision()
+    {
+        AddNewBlock(blockTypes[BlockType.Square], (0, 14), false);
+        var block = AddNewBlock(blockTypes[BlockType.Square], (0, 12));
+        
+        block.MoveDown();
+        Assert.Multiple(() =>
+        {
+            Assert.That(block.Anchor, Is.EqualTo((0, 12)));
+            Assert.That(game.Blocks.Count(), Is.EqualTo(3));
+        });
+    }
 
     [Test]
     public void TestCanSpawnNewBlockOnlyOnce()

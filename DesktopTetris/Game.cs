@@ -19,22 +19,29 @@ public class Game
     private readonly BlocksMap map = new BlocksMap();
 
     private readonly Timer nextTurnTimer;
+    private List<int> latestRemovedRows = new List<int>();
 
     public Game()
     {
         currentGame = this;
 
-        nextTurnTimer = new Timer();
+        nextTurnTimer = new Timer(400);
         nextTurnTimer.AutoReset = true;
         nextTurnTimer.Elapsed += OnNextTurn;
         // todo zapnout po debugingu
-        // nextTurnTimer.Start();
+        nextTurnTimer.Start();
     }
 
     private void OnNextTurn(object? sender, ElapsedEventArgs e) => NextTurn();
 
     public void NextTurn()
     {
+        if (latestRemovedRows.Any())
+        {
+            ShiftAllBlocksDown(latestRemovedRows.Max());
+            latestRemovedRows.Clear();
+        }
+
         var _blocks = blocks.ToList();
         for (int i = 0; i < blocks.Count; i++)
         {
@@ -47,9 +54,33 @@ public class Game
             if (!_blocks.Any())
                 break;
         }
-        
+
         foreach (var row in map.GetFilledRowsIndexes())
+        {
             SplitBlocks(row);
+            latestRemovedRows.Add(row);
+        }
+    }
+
+    private void ShiftAllBlocksDown(int row)
+    {
+        var _blocks = new List<Block>();
+        var _map = Map;
+        for (int y = 0; y < _map.GetLength(0); y++)
+        {
+            for (int x = 0; x < _map.GetLength(1); x++)
+            {
+                if (_map[y, x].Any() && y < row && !_blocks.Contains(_map[y, x][0]))
+                {
+                    _blocks.Add(_map[y, x][0]);
+                }
+            }
+        }
+
+        foreach (var block in _blocks)
+        {
+            block.MoveTo((block.Anchor.x, block.Anchor.y + 1));
+        }
     }
 
     private void OnBlockHitLowerBorder(object? sender, EventArgs e)

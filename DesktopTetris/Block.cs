@@ -40,7 +40,7 @@ public class Block
 
     private bool[,] matrice;
     private readonly int[] anchor; // upper left corner
-    private bool canSpawnNewBlock;
+    public bool canSpawnNewBlock;
     private Game game;
     
     public event EventHandler BlockHitLowerBorder;
@@ -60,6 +60,9 @@ public class Block
         this.anchor = anchor == null ? new[]{5, -this.matrice.GetLength(0)} : new[]{anchor.Value.x, anchor.Value.y};
         this.canSpawnNewBlock = canSpawnNewBlock;
         Color = color ?? colors[new Random().Next(colors.Count)];
+
+        if (this.canSpawnNewBlock)
+            HookEvents();
     }
 
     public (int x, int y) GetMapRelativePosition(int x, int y) => (anchor[0] + x, anchor[1] + y);
@@ -79,11 +82,23 @@ public class Block
     private void HookEvents()
     {
         Controls.RotatePress += OnRotate;
+        Controls.DownPress += OnDownPress;
+        Controls.RightPress += OnRightPress;
+        Controls.LeftPress += OnLeftPress;
     }
+
+    private void OnLeftPress(object? sender, EventArgs e) => MoveSideways(-1);
+
+    private void OnRightPress(object? sender, EventArgs e) => MoveSideways(1);
+
+    private void OnDownPress(object? sender, EventArgs e) => MoveDown();
 
     private void DisableInput()
     {
         Controls.RotatePress -= OnRotate;
+        Controls.DownPress -= OnDownPress;
+        Controls.RightPress -= OnRightPress;
+        Controls.LeftPress -= OnLeftPress;
     }
 
     public void RotateRight()
@@ -138,13 +153,14 @@ public class Block
 
         if (CollidesWithBottomBorder() || game.CollisionDetected())
         {
-            if (CollidesWithBottomBorder() && canSpawnNewBlock)
+            if (canSpawnNewBlock)
             {
                 anchor[1]--;
                 game.UpdateMap(this);
                 
                 canSpawnNewBlock = false;
                 BlockHitLowerBorder(this, EventArgs.Empty);
+                DisableInput();
                 return;
             }
             

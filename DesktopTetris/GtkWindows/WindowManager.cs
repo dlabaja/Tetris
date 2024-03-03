@@ -17,14 +17,10 @@ public static class WindowManager
 
     public static void DisposeWindow((int, int) key)
     {
-        Application.Invoke((_, _) => 
+        Application.Invoke((_, _) =>
         {
-            try
-            {
-                windows[key].Dispose();
-                windows.Remove(key);
-            }
-            catch{}
+            windows[key].Dispose();
+            windows.Remove(key);
         });
     }
 
@@ -48,14 +44,6 @@ public static class WindowManager
 
     private static IEnumerable<Window> GetAllBlockWindows()
     {
-        try
-        {
-            return Window.ListToplevels().Where(x => x.GetType() != typeof(MainWindow)).ToList();
-        }
-        catch
-        {
-            Debug.WriteLine("window chyba");
-            return Window.ListToplevels().Where(x => x.GetType() != typeof(MainWindow)).ToList();
-        }
+        return Window.ListToplevels().Where(x => x.GetType() != typeof(MainWindow)).ToList();
     }
 }
