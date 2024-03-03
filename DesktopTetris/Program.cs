@@ -15,6 +15,7 @@ public static class Program
             RuntimeHelpers.RunClassConstructor(typeof(WindowManager).TypeHandle);
             
             var g = new Game();
+            g.AddBlock(new Block());
             Thread.Sleep(-1);
         }).Start();
 

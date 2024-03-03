@@ -1,4 +1,5 @@
 using Gdk;
+using System.Diagnostics;
 
 namespace DesktopTetris;
 
@@ -41,6 +42,8 @@ public class Block
     private readonly int[] anchor; // upper left corner
     private bool canSpawnNewBlock;
     private Game game;
+    
+    public event EventHandler BlockHitLowerBorder;
 
     private readonly List<Color> colors = new List<Color>{
         new Color(3, 65, 174),
@@ -67,6 +70,8 @@ public class Block
     {
         anchor[0] = pos.x;
         anchor[1] = pos.y;
+        
+        game.UpdateMap(this);
     }
 
     private void OnRotate(object? sender, EventArgs e) => RotateRight();
@@ -92,11 +97,15 @@ public class Block
 
         var _matrice = matrice;
         matrice = newMatrice; // nahrazení matice
+        game.UpdateMap(this);
 
         if (CollidesWithSideBorder() || CollidesWithBottomBorder() || game.CollisionDetected())
         {
             matrice = _matrice;
+            return;
         }
+        
+        game.UpdateMap(this);
     }
 
     private bool CollidesWithSideBorder()
@@ -129,13 +138,17 @@ public class Block
 
         if (CollidesWithBottomBorder() || game.CollisionDetected())
         {
-            anchor[1]--;
-
-            if (anchor[1] == Game.mapHeight - 1 && canSpawnNewBlock)
+            if (CollidesWithBottomBorder() && canSpawnNewBlock)
             {
-                game.AddBlock(new Block());
+                anchor[1]--;
+                game.UpdateMap(this);
+                
                 canSpawnNewBlock = false;
+                BlockHitLowerBorder(this, EventArgs.Empty);
+                return;
             }
+            
+            anchor[1]--;
         }
         
         game.UpdateMap(this);

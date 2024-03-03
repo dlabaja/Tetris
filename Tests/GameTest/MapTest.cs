@@ -53,4 +53,16 @@ public class MapTest : TestBase
     {
         Assert.That(!map.ToList().Any(x => x.Count > 0));
     }
+    
+    [Test]
+    public void TestFilledRowsNextToEachOther()
+    {
+        map.AddBlock(new Block(blockTypes[BlockType.Square], (0, 0)));
+        map.AddBlock(new Block(blockTypes[BlockType.Square], (2, 0)));
+        map.AddBlock(new Block(blockTypes[BlockType.Square], (4, 0)));
+        map.AddBlock(new Block(blockTypes[BlockType.Square], (6, 0)));
+        map.AddBlock(new Block(blockTypes[BlockType.Square], (8, 0)));
+        
+        Assert.That(map.GetFilledRowsIndexes(), Is.EqualTo(new List<int>{0, 1}));
+    }
 }

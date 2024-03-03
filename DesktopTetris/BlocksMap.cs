@@ -29,9 +29,7 @@ public class BlocksMap
             if (map[y, x].Contains(block))
                 map[y, x].Remove(block);
     }
-
-
-
+    
     public void AddBlock(Block block)
     {
         for (int y = 0; y < block.Matrice.GetLength(0); y++)
@@ -41,6 +39,28 @@ public class BlocksMap
             if (block.Matrice[y, x] && Utils.InMapRange((pos.x, pos.y)))
                 map[pos.y, pos.x].Add(block);
         }
+    }
+
+    public List<int> GetFilledRowsIndexes()
+    {
+        var indexes = new List<int>();
+        for (int y = 0; y < map.GetLength(0); y++)
+        {
+            var isFilled = true;
+            for (int x = 0; x < map.GetLength(1); x++)
+            {
+                if (map[y, x].Any())
+                    continue;
+                
+                isFilled = false;
+                break;
+            }
+
+            if (isFilled)
+                indexes.Add(y);
+        }
+
+        return indexes;
     }
 
     public IEnumerable<List<Block>> ToList()

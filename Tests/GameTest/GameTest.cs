@@ -1,3 +1,5 @@
+using DesktopTetris;
+
 namespace Tests.GameTest;
 
 public class GameTest : TestBase
@@ -15,5 +17,20 @@ public class GameTest : TestBase
         var block = AddNewBlock();
         game.RemoveBlock(block);
         Assert.That(game.Blocks.Count(), Is.EqualTo(0));
+    }
+
+    [Test]
+    public void TestNextTurn()
+    {
+        var block = AddNewBlock();
+        var anchor = block.Anchor;
+        game.NextTurn();
+        Assert.That(block.Anchor.y, Is.EqualTo(anchor.y + 1));
+    }
+
+    [Test]
+    public void TestIsCurrentBlock()
+    {
+        Assert.That(Game.currentGame, Is.EqualTo(game));
     }
 }

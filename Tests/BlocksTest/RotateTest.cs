@@ -34,6 +34,8 @@ public class RotateTest : TestBase
                     Assert.That(block.Matrice[x, matrice.GetLength(0) - 1 - y], Is.EqualTo(matrice[y, x]));
                 }
             }
+            
+            game.RemoveBlock(block);
         }
     }
 
@@ -87,4 +89,13 @@ public class RotateTest : TestBase
 
         Assert.That(block.Matrice.GetLength(0), Is.EqualTo(4));
     }
+    
+    [Test]
+    public void TestRotateInMap()
+    {
+        var block = AddNewBlock(blockTypes[BlockType.J] ,(0, 0));
+        block.RotateRight();
+        
+        Assert.That(game.Map[1, 1].Count, Is.EqualTo(0));
+    } 
 }
